@@ -101,7 +101,7 @@ def CCA_pyal(df1:pd.DataFrame, field1: str, df2:pd.DataFrame =None, field2:str =
     d0 = d0[:n_samples,:]
     d1 = d1[:n_samples,:]
 
-    CC = dt.canoncorr(d0, d1)
+    CC = canoncorr(d0, d1)
 
     return CC
 
