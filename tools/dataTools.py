@@ -104,3 +104,32 @@ def CCA_pyal(df1:pd.DataFrame, field1: str, df2:pd.DataFrame =None, field2:str =
     CC = dt.canoncorr(d0, d1)
 
     return CC
+
+def VAF_pc_cc (X: np.ndarray, C: np.ndarray, A: np.ndarray) -> np.ndarray:
+    """
+    Calculate Variance Accounted For (VAF) for a double projection (as in from PCA --> to CCA) using the method in Gallego, NatComm, 2018
+    
+    Parameters
+    ----------
+    `X`: the data matrix, T x n with _T_ time points and _n_ neurons, and each neuron is **zero mean**.
+    
+    `C`: the first projection matrix, usually it is the `PCA_model.components_`, but in principle could be any projection matrix with orthogonal bases.
+    
+    `A` : is the CCA canonical axes, the output of the `canoncorr` function, in principle could be any projection matrix, not necessarily orthogonal.
+    
+    Returns
+    -------
+    `VAFs`: np.array with VAF for each axes of `C`, normalised between 0<VAF<1 for each axis, `sum(VAFs)` equals to total VAF.
+    """
+    # following the notation in Gallego 2018
+    D = inv(A.T@A)@A.T@C
+    E = C.T@A
+    norm = lambda m:np.sum(m**2)
+    
+    VAFs=np.empty((C.shape[0],))
+    for comp in range(1,C.shape[0]+1):
+        VAF = norm(X - X @ E[:,:comp] @ D[:comp,:]) / norm(X)
+        VAFs[comp-1] = 1-VAF
+
+    VAFs = np.array([VAFs[0],*np.diff(VAFs)])
+    return VAFs
