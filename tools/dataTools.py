@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.linalg import qr, svd, inv
+from sklearn.decomposition import PCA
+import pyaldata as pyal
+
 
 import logging
 
@@ -133,3 +136,51 @@ def VAF_pc_cc (X: np.ndarray, C: np.ndarray, A: np.ndarray) -> np.ndarray:
 
     VAFs = np.array([VAFs[0],*np.diff(VAFs)])
     return VAFs
+
+def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1:type(epoch_pyal), target1: int,
+             df2:pd.DataFrame, field2: str, epoch2:type(epoch_pyal), target2: int) -> (np.ndarray, np.ndarray):
+    """
+    Measure VAF for each CCA axis, between 2 DataFrames, fields, time epochs, and targets.
+    epoch1, epoch2: an instance of `epoch_pyal` function
+    """
+    def get_target_id(trial):
+        return int(np.round((trial.target_direction + np.pi) / (0.25*np.pi))) - 1
+
+    if "target_id" not in df1.columns:
+        df1["target_id"] = df1.apply(get_target_id, axis=1)
+    if "target_id" not in df2.columns:
+        df2["target_id"] = df2.apply(get_target_id, axis=1)
+ 
+    df1 = epoch1(df1)
+    rates_1 = np.concatenate(df1[field1].values, axis=0)
+    rates_1 -= np.mean(rates_1,axis=0)
+    rates_1_model = PCA(n_components=10, svd_solver='full').fit(rates_1)
+    rates_1_C = rates_1_model.components_
+    df1 = pyal.apply_dim_reduce_model(df1, rates_1_model, field1, '_pca');
+
+    
+    df1 = pyal.select_trials(df1, df1.target_id==target1)
+    pca_1_target = np.concatenate(df1['_pca'].values, axis=0)
+
+    
+    df2 = epoch2(df2)
+    rates_2 = np.concatenate(df2[field2].values, axis=0)
+    rates_2 -= np.mean(rates_2,axis=0)
+    rates_2_model = PCA(n_components=10, svd_solver='full').fit(rates_2)
+    rates_2_C = rates_2_model.components_
+    df2 = pyal.apply_dim_reduce_model(df2, rates_2_model, field2, '_pca');
+    
+    df2 = pyal.select_trials(df2, df2.target_id==target2)
+    pca_2_target = np.concatenate(df2['_pca'].values, axis=0)
+    
+    
+    # same number of timepoints in both matrices
+    n_samples = min ([pca_1_target.shape[0], pca_2_target.shape[0]])
+    pca_1_target = pca_1_target[:n_samples,:]
+    pca_2_target = pca_2_target[:n_samples,:]
+
+    A, B, _, _, _ = canoncorr(pca_1_target, pca_2_target, fullReturn=True)
+    VAFs1 = VAF_pc_cc(rates_1, rates_1_C, A)
+    VAFs2 = VAF_pc_cc(rates_2, rates_2_C, B)
+    
+    return VAFs1, VAFs2
