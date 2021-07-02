@@ -137,6 +137,15 @@ def VAF_pc_cc (X: np.ndarray, C: np.ndarray, A: np.ndarray) -> np.ndarray:
     VAFs = np.array([VAFs[0],*np.diff(VAFs)])
     return VAFs
 
+
+def epoch_pyal (start_point_name: str =None, end_point_name: str =None, rel_start: int =0, rel_end: int =0):
+    "Set the parameters for a time epoch"
+    def restrict_to_interval(df: pd.DataFrame) -> pd.DataFrame:
+        "Apply the interval (time epoch) to the Pyal DataFrame"
+        return pyal.restrict_to_interval(df, start_point_name=start_point_name, end_point_name=end_point_name, rel_start=rel_start, rel_end=rel_end)
+    return restrict_to_interval
+
+
 def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1:type(epoch_pyal), target1: int,
              df2:pd.DataFrame, field2: str, epoch2:type(epoch_pyal), target2: int) -> (np.ndarray, np.ndarray):
     """
@@ -184,10 +193,3 @@ def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1:type(epoch_pyal), targe
     VAFs2 = VAF_pc_cc(rates_2, rates_2_C, B)
     
     return VAFs1, VAFs2
-
-def epoch_pyal (start_point_name: str =None, end_point_name: str =None, rel_start: int =0, rel_end: int =0):
-    "Set the parameters for a time epoch"
-    def restrict_to_interval(df: pd.DataFrame) -> pd.DataFrame:
-        "Apply the interval (time epoch) to the Pyal DataFrame"
-        return pyal.restrict_to_interval(df, start_point_name=start_point_name, end_point_name=end_point_name, rel_start=rel_start, rel_end=rel_end)
-    return restrict_to_interval
