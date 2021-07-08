@@ -9,6 +9,18 @@ from sklearn.decomposition import PCA
 import logging
 
 
+def summary(df):
+    "prints a summary of monkey task datasets"
+    print(df.monkey[0], df.date[0])
+    time_sig = pyal.get_time_varying_fields(df)
+    print(f'time signals:{time_sig}')
+    for sig in time_sig:
+        print(f'{sig} units: {df[sig][0].shape[1]}') if 'spike' in sig else 0
+    print(f'tasks in file: {np.unique(df.task)}, epochs: {np.unique(df.epoch)}')
+    
+    print('=============\n')
+
+    
 def canoncorr(X:np.array, Y: np.array, fullReturn: bool = False) -> np.array:
     """
     Canonical Correlation Analysis (CCA)
