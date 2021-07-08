@@ -16,7 +16,10 @@ def summary(df):
     print(f'time signals:{time_sig}')
     for sig in time_sig:
         print(f'{sig} units: {df[sig][0].shape[1]}') if 'spike' in sig else 0
-    print(f'tasks in file: {np.unique(df.task)}, epochs: {np.unique(df.epoch)}')
+    try:
+        print(f'tasks in file: {np.unique(df.task)}, epochs: {np.unique(df.epoch)}')
+    except:
+        print(f'tasks in file: {np.unique(df.task)}')
     
     print('=============\n')
 
