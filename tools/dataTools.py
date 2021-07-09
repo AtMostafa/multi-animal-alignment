@@ -3,13 +3,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.linalg import qr, svd, inv
-from sklearn.decomposition import PCA
 import pyaldata as pyal
-
+from sklearn.decomposition import PCA
 
 import logging
 
 
+def summary(df):
+    "prints a summary of monkey task datasets"
+    print(df.monkey[0], df.date[0])
+    time_sig = pyal.get_time_varying_fields(df)
+    print(f'time signals:{time_sig}')
+    for sig in time_sig:
+        print(f'{sig} units: {df[sig][0].shape[1]}') if 'spike' in sig else 0
+    try:
+        print(f'tasks in file: {np.unique(df.task)}, epochs: {np.unique(df.epoch)}')
+    except:
+        print(f'tasks in file: {np.unique(df.task)}')
+    
+    print('=============\n')
+
+    
 def canoncorr(X:np.array, Y: np.array, fullReturn: bool = False) -> np.array:
     """
     Canonical Correlation Analysis (CCA)
@@ -137,32 +151,20 @@ def VAF_pc_cc (X: np.ndarray, C: np.ndarray, A: np.ndarray) -> np.ndarray:
     VAFs = np.array([VAFs[0],*np.diff(VAFs)])
     return VAFs
 
-
-def epoch_pyal (start_point_name: str =None, end_point_name: str =None, rel_start: int =0, rel_end: int =0):
-    "Set the parameters for a time epoch"
-    def restrict_to_interval(df: pd.DataFrame) -> pd.DataFrame:
-        "Apply the interval (time epoch) to the Pyal DataFrame"
-        return pyal.restrict_to_interval(df, start_point_name=start_point_name, end_point_name=end_point_name, rel_start=rel_start, rel_end=rel_end)
-    return restrict_to_interval
-
-
-def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1:type(epoch_pyal), target1: int,
-             df2:pd.DataFrame, field2: str, epoch2:type(epoch_pyal), target2: int) -> (np.ndarray, np.ndarray):
+def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1, target1: int,
+             df2:pd.DataFrame, field2: str, epoch2, target2: int) -> (np.ndarray, np.ndarray):
     """
     Measure VAF for each CCA axis, between 2 DataFrames, fields, time epochs, and targets.
-    epoch1, epoch2: an instance of `epoch_pyal` function
+    epoch1, epoch2: an instance of the `pyal.generate_epoch_fun` function.
     """
-    def get_target_id(trial):
-        return int(np.round((trial.target_direction + np.pi) / (0.25*np.pi))) - 1
-
     if "target_id" not in df1.columns:
         df1["target_id"] = df1.apply(get_target_id, axis=1)
     if "target_id" not in df2.columns:
         df2["target_id"] = df2.apply(get_target_id, axis=1)
  
-    df1 = epoch1(df1)
+    df1 = pyal.restrict_to_interval(df1,epoch_fun=epoch1)
     rates_1 = np.concatenate(df1[field1].values, axis=0)
-    rates_1 -= np.mean(rates_1,axis=0)
+#     rates_1 -= np.mean(rates_1,axis=0)
     rates_1_model = PCA(n_components=10, svd_solver='full').fit(rates_1)
     rates_1_C = rates_1_model.components_
     df1 = pyal.apply_dim_reduce_model(df1, rates_1_model, field1, '_pca');
@@ -172,9 +174,9 @@ def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1:type(epoch_pyal), targe
     pca_1_target = np.concatenate(df1['_pca'].values, axis=0)
 
     
-    df2 = epoch2(df2)
+    df2 = pyal.restrict_to_interval(df2, epoch_fun=epoch2)
     rates_2 = np.concatenate(df2[field2].values, axis=0)
-    rates_2 -= np.mean(rates_2,axis=0)
+#     rates_2 -= np.mean(rates_2,axis=0)
     rates_2_model = PCA(n_components=10, svd_solver='full').fit(rates_2)
     rates_2_C = rates_2_model.components_
     df2 = pyal.apply_dim_reduce_model(df2, rates_2_model, field2, '_pca');
@@ -188,8 +190,8 @@ def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1:type(epoch_pyal), targe
     pca_1_target = pca_1_target[:n_samples,:]
     pca_2_target = pca_2_target[:n_samples,:]
 
-    A, B, _, _, _ = canoncorr(pca_1_target, pca_2_target, fullReturn=True)
+    A, B, r, _, _ = canoncorr(pca_1_target, pca_2_target, fullReturn=True)
     VAFs1 = VAF_pc_cc(rates_1, rates_1_C, A)
     VAFs2 = VAF_pc_cc(rates_2, rates_2_C, B)
     
-    return VAFs1, VAFs2
+    return VAFs1, VAFs2, r
