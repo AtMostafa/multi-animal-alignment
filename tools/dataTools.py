@@ -20,6 +20,10 @@ def summary(df):
         print(f'tasks in file: {np.unique(df.task)}, epochs: {np.unique(df.epoch)}')
     except:
         print(f'tasks in file: {np.unique(df.task)}')
+    try:
+        print(f'Baseline trials: {np.sum(df.epoch=="BL")}')
+    except:
+        pass
     
     print('=============\n')
 
