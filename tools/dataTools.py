@@ -237,7 +237,7 @@ def VAF_pc_cc_pyal2(df1:pd.DataFrame, field1: str, epoch1, target1: int,
     rng = np.random.default_rng(12345)
     VAFs1, VAFs2, R = [], [], []
     if diffTooBig:
-        print(f'correcting for number of units: {n1, n2}')
+#         print(f'correcting for numbesr of units: {n1, n2}')
         for i in range(n_iter):
             idx = rng.choice(n_l, n_s)
             array_new = rates_1 if array1Bigger else rates_2
