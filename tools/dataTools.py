@@ -277,3 +277,56 @@ def VAF_pc_cc_pyal2(df1:pd.DataFrame, field1: str, epoch1, target1: int,
                                        df2, field2, epoch2, target2, n_components)
 
     return VAFs1, VAFs2, R
+
+
+def PCA_n_corrected(array1:np.ndarray, array2:np.ndarray, n_iter:int =20, n_components:int =10):
+    """
+    Repeat PCA `n_iter` times by subsampling the larger dataset. (not fully tested)
+
+    Parameters
+    ----------
+    `array1` and `array2` are: time x units
+    
+    Returns
+    -------
+    `PCA_models1` and `PCA_models2`: lists containing PCA objects. If the number of units needs correction, lengths are bigger than 1.
+
+    
+    """
+    n1 = array1.shape[1]
+    n2 = array2.shape[1]
+    n_s, n_l = min(n1, n2), max(n1, n2)
+    
+    if n1>=n2:
+        array1Bigger = True
+    else:
+        array1Bigger = False
+    
+    diffTooBig = (abs(n1-n2)/min(n1,n2) >= 2) or (abs(n1-n2) > 100)  # boolean
+    rng = np.random.default_rng(12345)
+
+    PCA_models1, PCA_models2 = [], []
+    if diffTooBig:
+        PCA_models=[]
+        for i in range(n_iter):
+            idx = rng.choice(n_l, n_s)
+            array_new = array1 if array1Bigger else array2
+            array_new = array_new[:,idx]
+            array_new_model = PCA(n_components=n_components, svd_solver='full').fit(array_new)
+            PCA_models.append(array_new_model)
+
+        if array1Bigger:
+            PCA_models1 = PCA_models
+            PCA_models2.append(PCA(n_components=n_components, svd_solver='full').fit(array2))
+            PCA_models2 *= n_iter
+        else:
+            PCA_models2 = PCA_models
+            PCA_models1.append(PCA(n_components=n_components, svd_solver='full').fit(array1))
+            PCA_models1 *= n_iter
+
+    
+    else:
+        PCA_models1.append(PCA(n_components=n_components, svd_solver='full').fit(array1))
+        PCA_models2.append(PCA(n_components=n_components, svd_solver='full').fit(array2))
+
+    return PCA_models1, PCA_models2
