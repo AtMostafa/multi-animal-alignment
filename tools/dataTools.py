@@ -196,3 +196,84 @@ def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1, target1: int,
     VAFs2 = VAF_pc_cc(rates_2, rates_2_C, B)
     
     return VAFs1, VAFs2, r
+
+def VAF_pc_cc_pyal2(df1:pd.DataFrame, field1: str, epoch1, target1: int,
+                    df2:pd.DataFrame, field2: str, epoch2, target2: int,
+                    n_components:int =10, n_iter:int =20):
+    """
+    Identical to `VAF_pc_cc_pyal`, ...
+    except that it  tries to correct for _very_ different number of units by...
+    subsampling the larger population `n_iter` times and averaging over the results.
+    """
+    if "target_id" not in df1.columns:
+        df1["target_id"] = df1.apply(get_target_id, axis=1)
+    if "target_id" not in df2.columns:
+        df2["target_id"] = df2.apply(get_target_id, axis=1)
+ 
+    df1_ = pyal.restrict_to_interval(df1,epoch_fun=epoch1)
+    rates_1 = np.concatenate(df1_[field1].values, axis=0)
+    rates_1 -= np.mean(rates_1,axis=0)
+
+    df2_ = pyal.restrict_to_interval(df2, epoch_fun=epoch2)
+    rates_2 = np.concatenate(df2_[field2].values, axis=0)
+    rates_2 -= np.mean(rates_2,axis=0)
+    
+    # PCA
+    ## check for `n`
+    n1 = rates_1.shape[1]
+    n2 = rates_2.shape[1]
+    n_s, n_l = min(n1, n2), max(n1, n2)
+    
+    if n1 >= n2:
+        array1Bigger = True
+    else:
+        array1Bigger = False
+    diffTooBig = (abs(n1-n2)/min(n1,n2) >= 2) or (abs(n1-n2) > 100)  # boolean
+
+    rng = np.random.default_rng(12345)
+    VAFs1, VAFs2, R = [], [], []
+    if diffTooBig:
+        print(f'correcting for number of units: {n1, n2}')
+        for i in range(n_iter):
+            idx = rng.choice(n_l, n_s)
+            array_new = rates_1 if array1Bigger else rates_2
+            array_new = array_new[:,idx]
+            array_new_model = PCA(n_components=n_components, svd_solver='full').fit(array_new)
+            
+            if array1Bigger:
+                PCA_model = PCA(n_components=n_components, svd_solver='full').fit(rates_2)
+            else:
+                PCA_model = PCA(n_components=n_components, svd_solver='full').fit(rates_1)
+
+            rates_1_model = array_new_model if array1Bigger else PCA_model
+            rates_1_C = rates_1_model.components_
+            df1__ = pyal.select_trials(df1_, df1_.target_id==target1)
+            rates_1_target = np.concatenate(df1__[field1].values, axis=0)
+            pca_1_target = rates_1_model.transform(rates_1_target[:,idx]) if array1Bigger else rates_1_model.transform(rates_1_target)
+
+            rates_2_model = PCA_model if array1Bigger else array_new_model
+            rates_2_C = rates_2_model.components_
+            df2__ = pyal.select_trials(df2_, df2_.target_id==target2)
+            rates_2_target = np.concatenate(df2__[field2].values, axis=0)
+            pca_2_target = rates_2_model.transform(rates_2_target) if array1Bigger else rates_2_model.transform(rates_2_target[:,idx])
+
+            # same number of timepoints in both matrices
+            n_samples = min ([pca_1_target.shape[0], pca_2_target.shape[0]])
+            pca_1_target = pca_1_target[:n_samples,:]
+            pca_2_target = pca_2_target[:n_samples,:]
+
+            A, B, r, _, _ = canoncorr(pca_1_target, pca_2_target, fullReturn=True)
+            V1 = VAF_pc_cc(array_new if array1Bigger else rates_1, rates_1_C, A)
+            V2 = VAF_pc_cc(rates_2 if array1Bigger else array_new, rates_2_C, B)
+            VAFs1.append(V1)
+            VAFs2.append(V2)
+            R.append(r)
+            
+        VAFs1 = np.mean(np.array(VAFs1), axis=0)
+        VAFs2 = np.mean(np.array(VAFs2), axis=0)
+        R = np.mean(np.array(R), axis=0)
+    else:
+        VAFs1,VAFs2,R = VAF_pc_cc_pyal(df1, field1, epoch1, target1,
+                                       df2, field2, epoch2, target2, n_components)
+
+    return VAFs1, VAFs2, R
