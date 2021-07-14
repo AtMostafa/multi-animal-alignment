@@ -152,7 +152,8 @@ def VAF_pc_cc (X: np.ndarray, C: np.ndarray, A: np.ndarray) -> np.ndarray:
     return VAFs
 
 def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1, target1: int,
-             df2:pd.DataFrame, field2: str, epoch2, target2: int) -> (np.ndarray, np.ndarray):
+                   df2:pd.DataFrame, field2: str, epoch2, target2: int,
+                   n_components:int =10) -> (np.ndarray, np.ndarray):
     """
     Measure VAF for each CCA axis, between 2 DataFrames, fields, time epochs, and targets.
     epoch1, epoch2: an instance of the `pyal.generate_epoch_fun` function.
@@ -165,7 +166,7 @@ def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1, target1: int,
     df1 = pyal.restrict_to_interval(df1,epoch_fun=epoch1)
     rates_1 = np.concatenate(df1[field1].values, axis=0)
     rates_1 -= np.mean(rates_1,axis=0)
-    rates_1_model = PCA(n_components=10, svd_solver='full').fit(rates_1)
+    rates_1_model = PCA(n_components=n_components, svd_solver='full').fit(rates_1)
     rates_1_C = rates_1_model.components_
     df1 = pyal.apply_dim_reduce_model(df1, rates_1_model, field1, '_pca');
 
@@ -177,7 +178,7 @@ def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1, target1: int,
     df2 = pyal.restrict_to_interval(df2, epoch_fun=epoch2)
     rates_2 = np.concatenate(df2[field2].values, axis=0)
     rates_2 -= np.mean(rates_2,axis=0)
-    rates_2_model = PCA(n_components=10, svd_solver='full').fit(rates_2)
+    rates_2_model = PCA(n_components=n_components, svd_solver='full').fit(rates_2)
     rates_2_C = rates_2_model.components_
     df2 = pyal.apply_dim_reduce_model(df2, rates_2_model, field2, '_pca');
     
