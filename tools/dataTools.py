@@ -25,7 +25,7 @@ def summary(df):
     except:
         pass
     
-    print('\n---\n\n')
+    print('\n---\n')
 
     
 def canoncorr(X:np.array, Y: np.array, fullReturn: bool = False) -> np.array:
