@@ -352,7 +352,7 @@ def get_data_array(data_list: list, epoch , area: str ='M1', n_components: int =
 
     Signature
     -------
-    AllData = get_data_array(data_list, execution_epoch, n_components=10)
+    AllData = get_data_array(data_list, execution_epoch, area='M1', n_components=10)
     all_data = np.reshape(AllData, (-1,10))
     """
     field = f'{area}_rates'
