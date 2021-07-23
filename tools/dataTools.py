@@ -334,3 +334,58 @@ def PCA_n_corrected(array1:np.ndarray, array2:np.ndarray, n_iter:int =20, n_comp
         PCA_models2.append(PCA(n_components=n_components, svd_solver='full').fit(array2))
 
     return PCA_models1, PCA_models2
+
+
+def get_data_array(data_list: list, epoch , area: str ='M1', n_components: int =10) -> np.ndarray:
+    """
+    Applies PCA to the data and return a data matrix of the shape: sessions x targets x  trials x time x PCs
+    
+    Parameters
+    ----------
+    `data_list`: list of pd.dataFrame datasets from pyal-data
+    `epoch`: an epoch function of the type `pyal.generate_epoch_fun`
+    `area`: area, either: 'M1', or 'S1', or 'PMd'
+
+    Returns
+    -------
+    `AllData`: np.array
+
+    Signature
+    -------
+    AllData = get_data_array(data_list, execution_epoch, n_components=10)
+    all_data = np.reshape(AllData, (-1,10))
+    """
+    field = f'{area}_rates'
+    n_shared_trial = np.inf
+    for df in data_list:
+        for target in range(8):
+            df_ = pyal.select_trials(df, df.target_id== target)
+            n_shared_trial = np.min((df_.shape[0], n_shared_trial))
+
+    n_shared_trial = int(n_shared_trial)
+
+    # finding the number of timepoints
+    df_ = pyal.restrict_to_interval(df_,epoch_fun=epoch)
+    n_timepoints = int(df_[field][0].shape[0])
+
+    # pre-allocating the data matrix
+    AllData = np.empty((len(data_list), 8, n_shared_trial, n_timepoints, n_components))
+
+    rng = np.random.default_rng(12345)
+    for session, df in enumerate(data_list):
+        df_ = pyal.restrict_to_interval(df,epoch_fun=epoch)
+        rates = np.concatenate(df_[field].values, axis=0)
+        rates -= np.mean(rates,axis=0)
+        rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
+        df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
+
+        for target in range(8):
+            df__ = pyal.select_trials(df_, df_.target_id==target)
+            all_id = df__.trial_id.to_numpy()
+            rng.shuffle(all_id)
+            # select the right number of trials to each target
+            df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
+            for trial, trial_rates in enumerate(df__._pca):
+                AllData[session,target,trial, :, :] = trial_rates
+    
+    return AllData
