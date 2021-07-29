@@ -27,7 +27,45 @@ def summary(df):
     
     print('\n---\n')
 
+def load_pyal_data(path: pathlib.Path) -> pd.DataFrame:
+    """
+    Loads pyal_data files. If it's a *.mat file, it is loaded, gets pickled and returned.
+    If the pickle already exists, the pickle gets loaded instead of the *.mat file.
     
+    Parameters
+    ----------
+    `path`: path to a *.mat file (or a *.p file).
+    
+    Returns
+    -------
+    `out`: a pyaldata pd.DataFrame
+    """
+    def load_pickle(pickle_path):
+        with pickle_path.open('rb') as f:
+            out = pickle.load(f)
+            assert isinstance(out, pd.DataFrame), f'wrong data in pickle {pickle_path}'
+        return out
+
+    if isinstance(path, str):
+        path = pathlib.Path(path)
+    
+    assert path.is_file(), f'path is not to a file: {path}'
+    
+    if path.suffix == '.p':
+        return load_pickle(path)
+    elif path.suffix == '.mat':
+        pickle_path = path.with_suffix('.p')
+        if pickle_path.exists():
+            return load_pickle(pickle_path)
+        else:
+            df = pyal.mat2dataframe(path, shift_idx_fields=True)
+            with open(pickle_path, 'wb') as f:
+                pickle.dump(df, f)
+            return df
+    else:
+        raise NameError(f'wrong file suffix: {path}')
+
+
 def canoncorr(X:np.array, Y: np.array, fullReturn: bool = False) -> np.array:
     """
     Canonical Correlation Analysis (CCA)
