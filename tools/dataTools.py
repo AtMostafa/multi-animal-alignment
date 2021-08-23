@@ -429,3 +429,47 @@ def get_data_array(data_list: list[pd.DataFrame], epoch , area: str ='M1', n_com
                 AllData[session,target,trial, :, :] = trial_rates
     
     return AllData
+
+def add_history(data:np.ndarray, n_hist:int) -> np.ndarray:
+    """
+    Adds history to the columns of `data`, by stacking `n_hist` previous time bins
+
+    Parameters
+    ----------
+    `data`: the data matrix, T x n with _T_ time points and _n_ neurons/components/features.
+    
+    `n_hist` : number of time rows to be added.
+    
+    Returns
+    -------
+    An array of _T_  x _(n x n_hist+1)_
+
+    """
+    out = np.hstack([np.roll(data, shift, axis=0) for shift in range(n_hist+1)])
+    out[:n_hist,data.shape[1]:] = 0
+    return out
+
+def add_history_to_data_array(allData, n_hist):
+    """
+    applies `add_history` to each trial
+
+    Parameters
+    ----------
+    `allData`: the data matrix coming from `dt.add_history`
+    
+    `n_hist` : number of time rows to be added.
+    
+    Returns
+    -------
+    Similar to the output of `dt.get_data_array`, with extra PC columns.
+    """
+    assert allData.ndim == 5, 'Wrong input size'
+    newShape = list(allData.shape)
+    newShape[-1] *= (n_hist+1)
+    
+    out = np.empty(newShape)
+    for session,sessionData in enumerate(allData):
+        for target,targetData in enumerate(sessionData):
+            for trial,trialData in enumerate(targetData):
+                out[session,target,trial,:,:] = add_history(trialData, n_hist)
+    return out
