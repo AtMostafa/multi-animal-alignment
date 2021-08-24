@@ -61,3 +61,14 @@ def shaded_errorbar(ax:plt.axes, x:np.array, y:np.array =None, lineStat=np.mean,
                             alpha=alpha, **shadeProps)
     
     return line, shade
+
+def plot_targets(ax=None):
+    if ax is None:
+        ax = plt.figure(figsize=(5,5)).add_subplot(1,1,1,fc='None')
+    
+    x = [np.cos(i*np.pi/4) for i in range(8)]
+    y = [np.sin(i*np.pi/4) for i in range(8)]
+    c= utility.get_colors(8)
+    ax.scatter(x=x, y=y, c=c, s=400, marker='o')
+    ax.set_axis_off()
+    return ax
