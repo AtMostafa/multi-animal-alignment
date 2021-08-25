@@ -375,7 +375,7 @@ def PCA_n_corrected(array1:np.ndarray, array2:np.ndarray, n_iter:int =20, n_comp
     return PCA_models1, PCA_models2
 
 
-def get_data_array(data_list: list[pd.DataFrame], epoch , area: str ='M1', n_components: int =10) -> np.ndarray:
+def get_data_array(data_list: list[pd.DataFrame], epoch=None , area: str ='M1', n_components: int =10) -> np.ndarray:
     """
     Applies PCA to the data and return a data matrix of the shape: sessions x targets x  trials x time x PCs
     with the minimum number of trials and timepoints shared across all the datasets/targets.
@@ -405,7 +405,9 @@ def get_data_array(data_list: list[pd.DataFrame], epoch , area: str ='M1', n_com
     n_shared_trial = int(n_shared_trial)
 
     # finding the number of timepoints
-    df_ = pyal.restrict_to_interval(df_,epoch_fun=epoch)
+    if epoch is not None:
+        df_ = pyal.restrict_to_interval(df_,epoch_fun=epoch)
+
     n_timepoints = int(df_[field][0].shape[0])
 
     # pre-allocating the data matrix
@@ -413,7 +415,7 @@ def get_data_array(data_list: list[pd.DataFrame], epoch , area: str ='M1', n_com
 
     rng = np.random.default_rng(12345)
     for session, df in enumerate(data_list):
-        df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
+        df_ = pyal.restrict_to_interval(df, epoch_fun=epoch) if epoch is not None else df
         rates = np.concatenate(df_[field].values, axis=0)
         rates -= np.mean(rates, axis=0)
         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
