@@ -2,6 +2,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+
+def phantom_axes(ax):
+    "Make an axes invisible"
+    ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)
+    [ax.spines[key].set_visible(False) for key in ax.spines.keys()]
+    ax.set_facecolor('None')
+    ax.set_alpha(0)
+    return ax
+
 def get_colors(n, colormap='plasma'):
     colors = []
     cmap = plt.cm.get_cmap(colormap)
