@@ -407,7 +407,7 @@ def get_data_array(data_list: list[pd.DataFrame], epoch=None , area: str ='M1', 
 
     # finding the number of timepoints
     if epoch is not None:
-        df_ = pyal.restrict_to_interval(df_,epoch_fun=epoch)
+        df_ = pyal.restrict_to_interval(data_list[0],epoch_fun=epoch)
 
     n_timepoints = int(df_[field][0].shape[0])
 
