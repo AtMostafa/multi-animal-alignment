@@ -397,7 +397,7 @@ def get_data_array(data_list: list[pd.DataFrame], epoch=None , area: str ='M1', 
     """
     field = f'{area}_rates'
     n_shared_trial = np.inf
-    target_ids = np.unique(df.target_id)
+    target_ids = np.unique(data_list[0].target_id)
     for df in data_list:
         for target in target_ids:
             df_ = pyal.select_trials(df, df.target_id== target)
