@@ -397,8 +397,9 @@ def get_data_array(data_list: list[pd.DataFrame], epoch=None , area: str ='M1', 
     """
     field = f'{area}_rates'
     n_shared_trial = np.inf
+    target_ids = np.unique(df.target_id)
     for df in data_list:
-        for target in np.unique(df.target_id):
+        for target in target_ids:
             df_ = pyal.select_trials(df, df.target_id== target)
             n_shared_trial = np.min((df_.shape[0], n_shared_trial))
 
@@ -411,7 +412,7 @@ def get_data_array(data_list: list[pd.DataFrame], epoch=None , area: str ='M1', 
     n_timepoints = int(df_[field][0].shape[0])
 
     # pre-allocating the data matrix
-    AllData = np.empty((len(data_list), 8, n_shared_trial, n_timepoints, n_components))
+    AllData = np.empty((len(data_list), len(target_ids), n_shared_trial, n_timepoints, n_components))
 
     rng = np.random.default_rng(12345)
     for session, df in enumerate(data_list):
@@ -421,15 +422,15 @@ def get_data_array(data_list: list[pd.DataFrame], epoch=None , area: str ='M1', 
         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
 
-        for target in np.unique(df_.target_id):
+        for targetIdx,target in enumerate(target_ids):
             df__ = pyal.select_trials(df_, df_.target_id==target)
             all_id = df__.trial_id.to_numpy()
             rng.shuffle(all_id)
             # select the right number of trials to each target
             df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
             for trial, trial_rates in enumerate(df__._pca):
-                AllData[session,target,trial, :, :] = trial_rates
-    
+                AllData[session,targetIdx,trial, :, :] = trial_rates
+
     return AllData
 
 def add_history(data:np.ndarray, n_hist:int) -> np.ndarray:
