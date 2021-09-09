@@ -428,7 +428,7 @@ def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: 
         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch) if epoch is not None else df
         rates = np.concatenate(df_[field].values, axis=0)
         rates -= np.mean(rates, axis=0)
-        rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
+        rates_model = model.fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
 
         for targetIdx,target in enumerate(target_ids):
