@@ -376,7 +376,7 @@ def PCA_n_corrected(array1:np.ndarray, array2:np.ndarray, n_iter:int =20, n_comp
     return PCA_models1, PCA_models2
 
 
-def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: str ='M1', model: Callable =None) -> np.ndarray:
+def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: str ='M1', model: Callable =None, n_components:int = 10) -> np.ndarray:
     """
     Applies the `model` to the data and return a data matrix of the shape: sessions x targets x trials x time x modes
     with the minimum number of trials and timepoints shared across all the datasets/targets.
@@ -387,6 +387,7 @@ def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: 
     `epoch`: an epoch function of the type `pyal.generate_epoch_fun`
     `area`: area, either: 'M1', or 'S1', or 'PMd', ...
     `model`: a model that implements `.fit()`, `.transform()` and `n_components`. By default: `PCA(10)`. If it's an integer: `PCA(integer)`.
+    `n_components`: use `model`, this is for backward compatibility
     
     Returns
     -------
@@ -400,7 +401,7 @@ def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: 
     if isinstance(data_list, pd.DataFrame):
         data_list = [data_list]
     if model is None:
-        model = PCA(n_components=10, svd_solver='full')
+        model = PCA(n_components=n_components, svd_solver='full')
     elif isinstance(model, int):
         model = PCA(n_components=model, svd_solver='full')
     
