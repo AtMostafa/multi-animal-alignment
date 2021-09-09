@@ -6,6 +6,7 @@ import pandas as pd
 from scipy.linalg import qr, svd, inv
 import pyaldata as pyal
 from sklearn.decomposition import PCA
+from typing import Callable
 
 import logging
 
@@ -375,26 +376,34 @@ def PCA_n_corrected(array1:np.ndarray, array2:np.ndarray, n_iter:int =20, n_comp
     return PCA_models1, PCA_models2
 
 
-def get_data_array(data_list: list[pd.DataFrame], epoch=None , area: str ='M1', n_components: int =10) -> np.ndarray:
+def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: str ='M1', model: Callable =None) -> np.ndarray:
     """
-    Applies PCA to the data and return a data matrix of the shape: sessions x targets x  trials x time x PCs
+    Applies the `model` to the data and return a data matrix of the shape: sessions x targets x trials x time x modes
     with the minimum number of trials and timepoints shared across all the datasets/targets.
     
     Parameters
     ----------
-    `data_list`: list of pd.dataFrame datasets from pyal-data
+    `data_list`: list of pd.dataFrame datasets from pyalData (could also be a single dataset)
     `epoch`: an epoch function of the type `pyal.generate_epoch_fun`
-    `area`: area, either: 'M1', or 'S1', or 'PMd'
-
+    `area`: area, either: 'M1', or 'S1', or 'PMd', ...
+    `model`: a model that implements `.fit()`, `.transform()` and `n_components`. By default: `PCA(10)`. If it's an integer: `PCA(integer)`.
+    
     Returns
     -------
-    `AllData`: np.array
+    `AllData`: np.ndarray
 
     Signature
     -------
-    AllData = get_data_array(data_list, execution_epoch, area='M1', n_components=10)
+    AllData = get_data_array(data_list, execution_epoch, area='M1', model=10)
     all_data = np.reshape(AllData, (-1,10))
     """
+    if isinstance(data_list, pd.DataFrame):
+        data_list = [data_list]
+    if model is None:
+        model = PCA(n_components=10, svd_solver='full')
+    elif isinstance(model, int):
+        model = PCA(n_components=model, svd_solver='full')
+    
     field = f'{area}_rates'
     n_shared_trial = np.inf
     target_ids = np.unique(data_list[0].target_id)
@@ -408,11 +417,10 @@ def get_data_array(data_list: list[pd.DataFrame], epoch=None , area: str ='M1', 
     # finding the number of timepoints
     if epoch is not None:
         df_ = pyal.restrict_to_interval(data_list[0],epoch_fun=epoch)
-
     n_timepoints = int(df_[field][0].shape[0])
 
     # pre-allocating the data matrix
-    AllData = np.empty((len(data_list), len(target_ids), n_shared_trial, n_timepoints, n_components))
+    AllData = np.empty((len(data_list), len(target_ids), n_shared_trial, n_timepoints, model.n_components))
 
     rng = np.random.default_rng(12345)
     for session, df in enumerate(data_list):
@@ -425,7 +433,10 @@ def get_data_array(data_list: list[pd.DataFrame], epoch=None , area: str ='M1', 
         for targetIdx,target in enumerate(target_ids):
             df__ = pyal.select_trials(df_, df_.target_id==target)
             all_id = df__.trial_id.to_numpy()
-            rng.shuffle(all_id)
+            # to guarantee shuffled ids
+            while ((all_id_sh := rng.permutation(all_id)) == all_id).all():
+                continue
+            all_id = all_id_sh
             # select the right number of trials to each target
             df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
             for trial, trial_rates in enumerate(df__._pca):
