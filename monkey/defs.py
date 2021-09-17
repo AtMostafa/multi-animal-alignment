@@ -1,7 +1,15 @@
-import numpy as np
 import pandas as pd
+import numpy as np
+import sklearn
+from sklearn.decomposition import PCA
+import scipy.linalg as linalg
+import scipy.stats as stats
+from sklearn.linear_model import Ridge, LinearRegression
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import make_scorer, r2_score
 import pyaldata as pyal
 
+MAX_HISTORY = 3  #int: no of bins to be added as history
 BIN_SIZE = .03  # sec
 WINDOW_prep = (-.4, .05)  # sec
 WINDOW_exec = (-.05, .40)  # sec
