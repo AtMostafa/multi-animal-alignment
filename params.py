@@ -1,4 +1,8 @@
+import pathlib
 import matplotlib
+
+# Global params
+root = pathlib.Path("/data")
 
 def set_rc_params(dictArg:dict ={}):
     matplotlib.rcParams['xtick.major.pad'] = 1
