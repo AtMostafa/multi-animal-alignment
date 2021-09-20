@@ -140,7 +140,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
 
     # pre-allocating the data matrix
     AllData = np.empty((len(data_list), 8, n_shared_trial, n_timepoints, n_components))
-    AllVel  = np.empty((len(data_list), 8, n_shared_trial, n_timepoints, 2))
+    AllVel  = np.empty((len(data_list), 8, n_shared_trial, n_timepoints, 3))
     rng = np.random.default_rng(12345)
     for session, df in enumerate(data_list):
         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
