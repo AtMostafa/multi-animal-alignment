@@ -128,7 +128,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
     field = f'{area}_rates'
     n_shared_trial = np.inf
     for df in data_list:
-        for target in range(8):
+        for target in range(4):
             df_ = pyal.select_trials(df, df.target_id== target)
             n_shared_trial = np.min((df_.shape[0], n_shared_trial))
 
@@ -149,7 +149,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
 
-        for target in range(8):
+        for target in range(4):
             df__ = pyal.select_trials(df_, df_.target_id==target)
             all_id = df__.trial_id.to_numpy()
             rng.shuffle(all_id)
