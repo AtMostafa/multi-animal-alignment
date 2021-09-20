@@ -378,13 +378,13 @@ def PCA_n_corrected(array1:np.ndarray, array2:np.ndarray, n_iter:int =20, n_comp
 
 def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: str ='M1', model: Callable =None, n_components:int = 10) -> np.ndarray:
     """
-    Applies the `model` to the data and return a data matrix of the shape: sessions x targets x trials x time x modes
+    Applies the `model` to the `data_list` and return a data matrix of the shape: sessions x targets x trials x time x modes
     with the minimum number of trials and timepoints shared across all the datasets/targets.
     
     Parameters
     ----------
     `data_list`: list of pd.dataFrame datasets from pyalData (could also be a single dataset)
-    `epoch`: an epoch function of the type `pyal.generate_epoch_fun`
+    `epoch`: an epoch function of the type `pyal.generate_epoch_fun()`
     `area`: area, either: 'M1', or 'S1', or 'PMd', ...
     `model`: a model that implements `.fit()`, `.transform()` and `n_components`. By default: `PCA(10)`. If it's an integer: `PCA(integer)`.
     `n_components`: use `model`, this is for backward compatibility
