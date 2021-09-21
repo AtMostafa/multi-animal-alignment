@@ -79,7 +79,7 @@ def prep_general_mouse (df):
     # add pull start idx
     df_['idx_pull_on'] = [pullIdx.nonzero()[0][0] if len(pullIdx.nonzero()[0])>0 else np.nan for pullIdx in df_.spkPullIdx]
     # add pull stop idx
-    df_['idx_pull_off'] = [pull.nonzero()[0][-1] for pull in df_.spkPullIdx]
+    df_['idx_pull_off'] = [min((pull.nonzero()[0][-1], velNans[0] if len(velNans:=np.isnan(vel).nonzero()[0])>0 else [np.inf])) for pull,vel in zip(df_.spkPullIdx,df_.hVelB)]
     # remove trials with no pull idx
     df_.dropna(subset=['idx_pull_on'], inplace=True)
     df_.idx_pull_on = df_.idx_pull_on.astype(np.int32)
