@@ -26,7 +26,7 @@ def find_file(path, extension=['.raw.kwd']):
     and returns a list of all file paths
     'extension' is a list of desired file extensions: ['.dat','.prm']
     """
-    if type(extension) is str:
+    if isinstance(extension, str):
         extension=extension.split()   #turning extension into a list with a single element
     return [os.path.join(walking[0],goodfile) for walking in list(os.walk(path)) 
          for goodfile in walking[2] for ext in extension if goodfile.endswith(ext)]
