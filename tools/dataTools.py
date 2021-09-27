@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.linalg import qr, svd, inv
+from scipy.interpolate import interp1d
 import pyaldata as pyal
 from sklearn.decomposition import PCA
 from typing import Callable
@@ -488,3 +489,25 @@ def add_history_to_data_array(allData, n_hist):
             for trial,trialData in enumerate(targetData):
                 out[session,target,trial,:,:] = add_history(trialData, n_hist)
     return out
+
+def warp_time (a:np.ndarray, b:np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    `a` and `b` must be of shape: ** time x features **.
+    The shorter of the two (shorter along the *time* axis) will be warped (using 1D interpolation) to the size of the longer one.
+    Inputs must not contain undefined values.
+    """
+    assert max((a.ndim,b.ndim)) <= 2, "input cannot have more than 2 dimensions"
+    
+    # to clean the mouse data
+    a = a[np.logical_not(np.isnan(a,))[:,0]]
+    b = b[np.logical_not(np.isnan(b,))[:,0]]
+    
+    a_is_shorter = a.shape[0] < b.shape[0]
+    short, long = (a,b) if a_is_shorter else (b,a)
+    x_short = np.linspace(0,1,short.shape[0])
+    x_long = np.linspace(0,1,long.shape[0])
+
+    func = interp1d(x_short,short, axis=0, kind='linear')
+    out_sh = func(x_long)
+
+    return (out_sh,long) if a_is_shorter else (long,out_sh)
