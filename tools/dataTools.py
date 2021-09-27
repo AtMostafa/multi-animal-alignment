@@ -495,6 +495,11 @@ def warp_time (a:np.ndarray, b:np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     `a` and `b` must be of shape: ** time x features **.
     The shorter of the two (shorter along the *time* axis) will be warped (using 1D interpolation) to the size of the longer one.
     Inputs must not contain undefined values.
+
+    Returns
+    -------
+    2 `np.ndarray`s, corresponding to `a` and `b`, respectively.
+
     """
     assert max((a.ndim,b.ndim)) <= 2, "input cannot have more than 2 dimensions"
     
