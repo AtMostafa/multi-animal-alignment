@@ -16,6 +16,8 @@ def set_rc_params(dictArg:dict ={}):
     matplotlib.rcParams['xtick.labelsize']   = 'medium'
     matplotlib.rcParams['ytick.labelsize']   = 'medium'
     matplotlib.rcParams['text.usetex'] = True
+    matplotlib.rcParams['font.family'] = 'serif'
+    matplotlib.rcParams['font.serif'] = 'Times'
     matplotlib.rcParams['legend.frameon'] = False
     matplotlib.rcParams['legend.fancybox'] = False
     
