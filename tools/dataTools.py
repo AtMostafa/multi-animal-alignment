@@ -512,7 +512,7 @@ def warp_time (a:np.ndarray, b:np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     x_short = np.linspace(0,1,short.shape[0])
     x_long = np.linspace(0,1,long.shape[0])
 
-    if (len(x_long) - len(x_short))/len(x_short) > 3:
+    if (len(x_long) - len(x_short)) > 3*len(x_short):
         logging.warning(f'warp_time: size diff too big:{len(x_long)=} and {len(x_short)=}')
     
     func = interp1d(x_short,short, axis=0, kind='linear')
