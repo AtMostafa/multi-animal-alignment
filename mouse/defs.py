@@ -95,7 +95,7 @@ def prep_general_mouse (df):
     df_ = pyal.select_trials(df_, df_.idx_pull_on < df_.idx_pull_off)
     # !!! discard outlier behaviour---tricky stuff !!!
         # reach duration < 700ms
-    df_ = pyal.select_trials(df_, df_.idx_pull_on - df_.idx_movement_on < 70)
+    df_ = pyal.select_trials(df_, df_.idx_pull_on - df_.idx_movement_on < 65)
         # pull duration < 450ms
     df_ = pyal.select_trials(df_, df_.idx_pull_off - df_.idx_pull_on < 45)
 
