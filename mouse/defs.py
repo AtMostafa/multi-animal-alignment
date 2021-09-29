@@ -94,12 +94,10 @@ def prep_general_mouse (df):
     df_ = pyal.select_trials(df_, df_.idx_movement_on < df_.idx_pull_on)
     df_ = pyal.select_trials(df_, df_.idx_pull_on < df_.idx_pull_off)
     # !!! discard outlier behaviour---tricky stuff !!!
-        # 100ms < reach duration < 700ms
+        # reach duration < 700ms
     df_ = pyal.select_trials(df_, df_.idx_pull_on - df_.idx_movement_on < 70)
-    df_ = pyal.select_trials(df_, df_.idx_pull_on - df_.idx_movement_on > 10)
-        # 100ms < pull duration < 450ms
+        # pull duration < 450ms
     df_ = pyal.select_trials(df_, df_.idx_pull_off - df_.idx_pull_on < 45)
-    df_ = pyal.select_trials(df_, df_.idx_pull_off - df_.idx_pull_on > 10)
 
     try:
         noLaserIndex = [i for i,laserData in enumerate(df_.spkTimeBlaserI) if not np.any(laserData)]
