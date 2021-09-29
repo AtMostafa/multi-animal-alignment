@@ -108,7 +108,7 @@ def prep_general_mouse (df):
         # due to absence of this field in no-laser sessions
         pass
 
-#     df_ = pyal.combine_time_bins(df_, int(BIN_SIZE/.01))
+    df_ = pyal.combine_time_bins(df_, int(BIN_SIZE/.01))
     for signal in new_fields:
         df_ = pyal.sqrt_transform_signal(df_, signal)
 
