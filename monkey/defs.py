@@ -117,3 +117,6 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
     
     return AllData, AllVel
 
+def time_trim(a,b):
+    l = min(a.shape[0],b.shape[0])
+    return a[:l],b[:l]
