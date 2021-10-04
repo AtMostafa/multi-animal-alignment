@@ -5,6 +5,7 @@ import numpy as np
 # Global params
 root = pathlib.Path("/data")
 rng = np.random.default_rng(np.random.SeedSequence(12345))
+n_iter = 100
 
 def set_rc_params(dictArg:dict ={}):
     matplotlib.rcParams['xtick.major.pad'] = 1
