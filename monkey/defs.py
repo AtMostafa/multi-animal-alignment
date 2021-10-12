@@ -16,7 +16,7 @@ BIN_SIZE = .03  # sec
 WINDOW_prep = (-.4, .05)  # sec
 WINDOW_exec = (-.05, .40)  # sec
 n_components = 10  # min between M1 and PMd
-areas = ('M1', 'PMd')
+areas = ('M1', 'PMd', 'MCx')
 
 prep_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_prep[0]/BIN_SIZE),
@@ -43,6 +43,13 @@ def prep_general (df):
     for signal in time_signals:
         df_ = pyal.remove_low_firing_neurons(df, signal, 1)
     
+    MCx_signals = [signal for signal in time_signals if 'M1' in signal or 'PMd' in signal]
+    if len(MCx_signals) > 1:
+        df_ = pyal.merge_signals(df_, MCx_signals, 'MCx_spikes')
+    elif len(MCx_signals) == 1:
+        df_ = pyal.rename_fields(df_, {MCx_signals[0]:'MCx_spikes'})
+    time_signals += MCx_signals
+
     df_= pyal.select_trials(df, df.result== 'R')
     df_= pyal.select_trials(df_, df_.epoch=='BL')
     
