@@ -48,7 +48,7 @@ def prep_general (df):
         df_ = pyal.merge_signals(df_, MCx_signals, 'MCx_spikes')
     elif len(MCx_signals) == 1:
         df_ = pyal.rename_fields(df_, {MCx_signals[0]:'MCx_spikes'})
-    time_signals += MCx_signals
+    time_signals = [signal for signal in pyal.get_time_varying_fields(df_) if 'spikes' in signal]
 
     df_= pyal.select_trials(df_, df_.result== 'R')
     df_= pyal.select_trials(df_, df_.epoch=='BL')
