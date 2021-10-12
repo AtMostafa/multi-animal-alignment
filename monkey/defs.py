@@ -50,7 +50,7 @@ def prep_general (df):
         df_ = pyal.rename_fields(df_, {MCx_signals[0]:'MCx_spikes'})
     time_signals += MCx_signals
 
-    df_= pyal.select_trials(df, df.result== 'R')
+    df_= pyal.select_trials(df_, df_.result== 'R')
     df_= pyal.select_trials(df_, df_.epoch=='BL')
     
     assert np.all(df_.bin_size == .01), 'bin size is not consistent!'
