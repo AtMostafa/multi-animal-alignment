@@ -15,7 +15,7 @@ MAX_HISTORY = 3  #int: no of bins to be added as history
 BIN_SIZE = .03  # sec
 WINDOW_ctrl = (-.95, -.5)
 WINDOW_prep = (-.45, .05)  # sec
-WINDOW_exec = (0, .45)  # sec
+WINDOW_exec = (0, .5)  # sec
 n_components = 10  # min between M1 and Str
 areas = ('M1', 'Str')
 
@@ -27,7 +27,6 @@ exec_epoch = pyal.generate_epoch_fun(start_point_name='idx_pull_off',
                                      rel_start=int(-WINDOW_exec[1]/BIN_SIZE),
                                      rel_end=int(-WINDOW_exec[0]/BIN_SIZE)
                                     )
-
 fixation_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on', 
                                          rel_start=int(WINDOW_ctrl[0]/BIN_SIZE),
                                          rel_end=int(WINDOW_ctrl[1]/BIN_SIZE)
