@@ -43,9 +43,6 @@ def prep_general (df):
     for signal in time_signals:
         df_ = pyal.remove_low_firing_neurons(df, signal, 1)
     
-    df_ = pyal.select_trials(df_, df_.target_id < 7)
-    df_ = pyal.select_trials(df_, df_.target_id > 2)
-
     MCx_signals = [signal for signal in time_signals if 'M1' in signal or 'PMd' in signal]
     if len(MCx_signals) > 1:
         df_ = pyal.merge_signals(df_, MCx_signals, 'MCx_spikes')
