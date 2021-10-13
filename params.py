@@ -4,6 +4,9 @@ import numpy as np
 
 # Global params
 root = pathlib.Path("/data")
+repoPath = pathlib.Path.cwd()
+figPath = repoPath / 'figures'
+
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 n_iter = 100
 
