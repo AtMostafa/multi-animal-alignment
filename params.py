@@ -3,6 +3,9 @@ import matplotlib
 import numpy as np
 
 # Global params
+from monkey import defs as monkey_defs
+from mouse import defs as mouse_defs
+
 root = pathlib.Path("/data")
 repoPath = pathlib.Path.cwd()
 figPath = repoPath / 'figures'
