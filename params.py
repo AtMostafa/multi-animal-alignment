@@ -12,6 +12,7 @@ figPath = repoPath / 'figures'
 
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 n_iter = 100
+Behav_corr_TH = 0.5
 
 def set_rc_params(dictArg:dict ={}):
     matplotlib.rcParams['xtick.major.pad'] = 1
