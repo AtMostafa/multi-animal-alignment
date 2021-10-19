@@ -89,7 +89,6 @@ def prep_general_mouse (df):
     for signal in new_fields:
         df_ = pyal.remove_low_firing_neurons(df_, signal, 1)
 
-    df_= pyal.select_trials(df_, df_.trialType == 'sp')
     df_ = pyal.select_trials(df_, df_.idx_movement_on < df_.idx_pull_on)
     df_ = pyal.select_trials(df_, df_.idx_pull_on < df_.idx_pull_off)
     # !!! discard outlier behaviour---tricky stuff !!!
