@@ -33,3 +33,17 @@ def set_rc_params(dictArg:dict ={}):
     
     for key,val in dictArg.items():
         matplotlib.rcParams[key] = val
+
+def load_unit_depth(df, field='depthCtx'):
+    """
+    used for the mice datasets
+    *RAW* datafils must be saved under: `root / mouse-data-raw`
+    """
+    from scipy.io import loadmat
+    fileName = df.file[0]
+    
+    rawFile = root / 'mouse-data-raw' / fileName
+    rawFile = rawFile.parent / (rawFile.stem[:-3] + rawFile.suffix)
+    
+    a = loadmat(rawFile)['depthCtx'].flatten()
+    return a
