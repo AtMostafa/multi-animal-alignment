@@ -45,5 +45,5 @@ def load_unit_depth(df, field='depthCtx'):
     rawFile = root / 'mouse-data-raw' / fileName
     rawFile = rawFile.parent / (rawFile.stem[:-3] + rawFile.suffix)
     
-    a = loadmat(rawFile)['depthCtx'].flatten()
+    a = loadmat(rawFile)[field].flatten()
     return a
