@@ -119,7 +119,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
             rng.shuffle(all_id)
             # select the right number of trials to each target
             df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
-            for trial, (trial_rates,trial_vel) in enumerate(zip(df__._pca, df__.vel)):
+            for trial, (trial_rates,trial_vel) in enumerate(zip(df__._pca, df__.pos)):
                 AllData[session,target,trial, :, :] = trial_rates
                 AllVel[session,target,trial, :, :] = trial_vel
     
