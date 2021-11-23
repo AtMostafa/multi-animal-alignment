@@ -59,17 +59,19 @@ def prep_general_mouse (df):
         if field not in df_.columns:continue
         df_[field] = [fill_zeros(s) for s in df_[field]]
     # fill fields that are cut with np.nans and remove trials that are too long or don't exist
-    cut_fields = ['hTrjB', 'hVelB']
+    cut_fields = ['hTrjB', 'hVelB','hDistFromInitPos']
     df_['badIndex'] = [max(trialT.shape)>n_bins or
-                       max(trialV.shape)>n_bins or 
+                       max(trialV.shape)>n_bins or
+                       max(trialD.shape)>n_bins or
                        max(trialT.shape) < 2 or 
                        max(trialV.shape) < 2 or 
-                       np.isnan(trialT).sum() > 5 for trialT,trialV in zip(df_.hTrjB,df_.hVelB)]
+                       np.isnan(trialT).sum() > 5 for trialT,trialV,trialD in zip(df_.hTrjB,df_.hVelB,df_.hDistFromInitPos)]
     df_= pyal.select_trials(df_, df_.badIndex == False)
     df_.drop('badIndex', axis=1, inplace=True)
-    fill_nans = lambda a: a if max(a.shape)==n_bins else np.pad(a, ((0,n_bins-max(a.shape)),(0,0)), 'constant', constant_values=(np.nan,))
+    fill_nans = lambda a: a if max(a.shape)==n_bins else np.pad(a, (((0,n_bins-max(a.shape)),)+(len(a.shape)-1)*((0,0),)), 'constant', constant_values=(np.nan,))
     for field in cut_fields:
         if field not in df_.columns:continue
+        print(field)
         df_[field] = [fill_nans(s.T) for s in df_[field]]   
     # add bin_size
     df_['bin_size']=0.01  # data has 10ms bin size
