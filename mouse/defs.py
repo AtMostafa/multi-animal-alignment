@@ -71,7 +71,6 @@ def prep_general_mouse (df):
     fill_nans = lambda a: a if max(a.shape)==n_bins else np.pad(a, (((0,n_bins-max(a.shape)),)+(len(a.shape)-1)*((0,0),)), 'constant', constant_values=(np.nan,))
     for field in cut_fields:
         if field not in df_.columns:continue
-        print(field)
         df_[field] = [fill_nans(s.T) for s in df_[field]]   
     # add bin_size
     df_['bin_size']=0.01  # data has 10ms bin size
