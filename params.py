@@ -15,10 +15,12 @@ n_iter = 100
 Behav_corr_TH = 0.5
 
 def set_rc_params(dictArg:dict ={}):
+    matplotlib.rcParams['backend']   = 'PDF'
     matplotlib.rcParams['xtick.major.pad'] = 1
     matplotlib.rcParams['ytick.major.pad'] = 1
     matplotlib.rcParams['axes.labelpad']   = 2
     matplotlib.rcParams['axes.titlepad']   = 5
+    matplotlib.rcParams['font.size']   = 8
     matplotlib.rcParams['axes.titlesize']   = 8
     matplotlib.rcParams['axes.labelsize']   = 8
     matplotlib.rcParams['xtick.labelsize']   = 6.5
