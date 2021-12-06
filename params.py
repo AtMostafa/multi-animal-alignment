@@ -9,6 +9,9 @@ from mouse import defs as mouse_defs
 root = pathlib.Path("/data")
 repoPath = pathlib.Path.cwd()
 figPath = repoPath / 'figures'
+LargeFig = (7,8)
+MedFig = (4.3,4.3)
+SmallPanel= (1.5,1.5)
 
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 n_iter = 100
