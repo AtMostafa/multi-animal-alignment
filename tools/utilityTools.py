@@ -82,3 +82,25 @@ def plot_targets(ax=None, markerSize=50):
     ax.scatter(x=x, y=y, c=c, s=markerSize, marker='o')
     ax.set_axis_off()
     return ax
+
+def add_gridspec_abs(fig, nrows=1, ncols=1, left=0, bottom=0, right=None, top=None, width=1, height=1, **kwargs):
+    """
+    Equivalent to `fig.add_gridspec` except  all the inputs are in absolute values in inches.
+    """
+    figw, figh = fig.get_size_inches()
+    if right is None or top is None:  # aligned on bottom left
+        gs = fig.add_gridspec(nrows=nrows, ncols=ncols, 
+                              left=left/figw, bottom=bottom/figh,
+                              right=(left/figw) + (width/figw),
+                              top=(bottom/figh)+(height/figh),
+                              **kwargs
+                             )
+    else:  # aligned on top right
+        gs = fig.add_gridspec(nrows=nrows, ncols=ncols, 
+                              left=(right/figw)-(width/figw), 
+                              bottom=(top/figh)-(height/figh),
+                              right=right/figw, top=top/figh,
+                              **kwargs
+                             )
+    
+    return gs
