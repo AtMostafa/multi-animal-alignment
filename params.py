@@ -62,4 +62,4 @@ class panels:
     schmatic = (2,MedH)
     raster = (2.4,SmallH)
     velocity = (LargeFig[0]-schmatic[0],TinyH)
-    proj_3d_align = (LargeFig[0],MedH)
+    proj_3d_align = (LargeFig[0],SmallH)
