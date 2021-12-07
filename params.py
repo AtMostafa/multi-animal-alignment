@@ -11,7 +11,6 @@ repoPath = pathlib.Path.cwd()
 figPath = repoPath / 'figures'
 LargeFig = (7,8)
 MedFig = (4.3,4.3)
-SmallPanel= (1.5,1.5)
 
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 n_iter = 100
@@ -52,3 +51,13 @@ def load_unit_depth(df, field='depthCtx'):
     
     a = loadmat(rawFile)[field].flatten()
     return a
+
+class panels:
+    "sizes of different panels in the paper"
+    SmallH = 1.5
+    MedH = 2
+    BigH = 3
+    
+    schmatic = (2,BigH)
+    raster_and_vel = (LargeFig[0]-schmatic[0],BigH)
+    proj_3d_align = (LargeFig[0],MedH)
