@@ -58,6 +58,6 @@ class panels:
     MedH = 2
     BigH = 3
     
-    schmatic = (2,BigH)
-    raster_and_vel = (LargeFig[0]-schmatic[0],BigH)
+    schmatic = (2,MedH)
+    raster_and_vel = (LargeFig[0]-schmatic[0],MedH)
     proj_3d_align = (LargeFig[0],MedH)
