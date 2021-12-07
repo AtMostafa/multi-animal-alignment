@@ -54,10 +54,12 @@ def load_unit_depth(df, field='depthCtx'):
 
 class panels:
     "sizes of different panels in the paper"
+    TinyH = 0.5
     SmallH = 1.5
-    MedH = 2
+    MedH = SmallH + TinyH
     BigH = 3
     
     schmatic = (2,MedH)
-    raster_and_vel = (LargeFig[0]-schmatic[0],MedH)
+    raster = (2.4,SmallH)
+    velocity = (LargeFig[0]-schmatic[0],TinyH)
     proj_3d_align = (LargeFig[0],MedH)
