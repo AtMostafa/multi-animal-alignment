@@ -106,11 +106,15 @@ def add_gridspec_abs(fig, nrows=1, ncols=1, left=0, bottom=0, right=None, top=No
     return gs
 
 def report(func):
-    "decorator to print the name of the function being executed."
+    "decorator to print the name and execution time of the function being executed."
     def inner(*ar,**kar):                                                                                            
-        print(f'Running: `{func.__name__}`', end='\r')
+        print(f'Running: `{func.__name__}`...', end='\r')
         start = time.time()
-        out = func(*ar,**kar)
-        print(f'Running: `{func.__name__}` for {time.time() - start:.1f}s')
+        try:
+            out = func(*ar,**kar)
+        except Exception as e:
+            print(f'Failed: `{func.__name__}` after {time.time() - start:.1f}s')
+            print(repr(e))
+        print(f'Executed: `{func.__name__}` in {time.time() - start:.1f}s')
         return out
     return inner
