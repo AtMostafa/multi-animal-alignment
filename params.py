@@ -63,6 +63,7 @@ class panels:
     raster = (2.4,SmallH)
     velocity = (LargeFig[0]-schmatic[0],TinyH)
     proj_3d_align = (LargeFig[0],SmallH)
+    cca = (1.5, SmallH)
 
 class colors:
     "colors for different data types in the paper"
