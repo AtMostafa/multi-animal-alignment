@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import os
+import os, time
 
 
 def phantom_axes(ax):
@@ -104,3 +104,13 @@ def add_gridspec_abs(fig, nrows=1, ncols=1, left=0, bottom=0, right=None, top=No
                              )
     
     return gs
+
+def report(func):
+    "decorator to print the name of the function being executed."
+    def inner(*ar,**kar):                                                                                            
+        print(f'Running: `{func.__name__}`', end='\r')
+        start = time.time()
+        out = func(*ar,**kar)
+        print(f'Running: `{func.__name__}` for {time.time() - start:.1f}s')
+        return out
+    return inner
