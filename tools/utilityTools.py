@@ -110,11 +110,7 @@ def report(func):
     def inner(*ar,**kar):                                                                                            
         print(f'Running: `{func.__name__}`...', end='\r')
         start = time.time()
-        try:
-            out = func(*ar,**kar)
-        except Exception as e:
-            print(f'Failed: `{func.__name__}` after {time.time() - start:.1f}s')
-            print(repr(e))
+        out = func(*ar,**kar)
         print(f'Executed: `{func.__name__}` in {time.time() - start:.1f}s')
         return out
     return inner
