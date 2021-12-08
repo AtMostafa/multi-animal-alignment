@@ -27,6 +27,8 @@ def set_rc_params(dictArg:dict ={}):
     matplotlib.rcParams['axes.labelsize']   = 8
     matplotlib.rcParams['xtick.labelsize']   = 6.5
     matplotlib.rcParams['ytick.labelsize']   = 6.5
+    matplotlib.rcParams['legend.fontsize']   = 6.5
+    matplotlib.rcParams['legend.title_fontsize']   = 6.5
     matplotlib.rcParams['text.usetex'] = True
     matplotlib.rcParams['font.family'] = 'sans-serif'
     matplotlib.rcParams['font.serif'] = 'Helvetica'
@@ -63,7 +65,9 @@ class panels:
     raster = (2.4,SmallH)
     velocity = (LargeFig[0]-schmatic[0],TinyH)
     proj_3d_align = (LargeFig[0],SmallH)
-    cca = (1.5, SmallH)
+    cca = (1, SmallH)
+    cca_hist = (1.5,SmallH)
+    
 
 class colors:
     "colors for different data types in the paper"
