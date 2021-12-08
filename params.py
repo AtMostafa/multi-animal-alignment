@@ -18,6 +18,7 @@ Behav_corr_TH = 0.5
 
 def set_rc_params(dictArg:dict ={}):
     matplotlib.rcParams['backend']   = 'PDF'
+    matplotlib.rcParams['lines.markersize'] = 4
     matplotlib.rcParams['xtick.major.pad'] = 1
     matplotlib.rcParams['ytick.major.pad'] = 1
     matplotlib.rcParams['axes.labelpad']   = 2
