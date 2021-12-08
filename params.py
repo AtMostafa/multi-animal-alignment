@@ -67,6 +67,7 @@ class panels:
     proj_3d_align = (LargeFig[0],SmallH)
     cca = (1.5, SmallH)
     cca_hist = (2,SmallH)
+    decoding_hist = (2,SmallH)
     
 
 class colors:
