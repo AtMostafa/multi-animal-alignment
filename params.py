@@ -76,5 +76,5 @@ class colors:
     LowerCC = 'gray'
     UpperCC = 'cornflowerblue'
     MonkeyPts = 'xkcd:brown'
-    MousePts = 'xkcd:plum'
+    MousePts = 'xkcd:violet'
     UniversalDecoder = 'goldenrod'
