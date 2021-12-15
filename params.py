@@ -70,10 +70,11 @@ class panels:
     cca_hist = (2,SmallH)
     decoding_hist = (2,SmallH)
     
-
 class colors:
     "colors for different data types in the paper"
     MainCC = 'k'
     LowerCC = 'gray'
     UpperCC = 'cornflowerblue'
+    MonkeyPts = 'xkcd:brown'
+    MousePts = 'xkcd:plum'
     UniversalDecoder = 'goldenrod'
