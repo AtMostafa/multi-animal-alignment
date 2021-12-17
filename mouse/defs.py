@@ -18,6 +18,7 @@ WINDOW_prep = (-.45, .05)  # sec
 WINDOW_exec = (-.05, .45)  # sec
 n_components = 10  # min between M1 and Str
 areas = ('M1', 'Str')
+n_targets = 1
 
 prep_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_prep[0]/BIN_SIZE),
@@ -136,7 +137,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
     field = f'{area}_rates'
     n_shared_trial = np.inf
     for df in data_list:
-        for target in range(4):
+        for target in range(n_targets):
             df_ = pyal.select_trials(df, df.target_id== target)
             n_shared_trial = np.min((df_.shape[0], n_shared_trial))
 
@@ -156,7 +157,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
 
-        for target in range(4):
+        for target in range(n_targets):
             df__ = pyal.select_trials(df_, df_.target_id==target)
             all_id = df__.trial_id.to_numpy()
             rng.shuffle(all_id)
