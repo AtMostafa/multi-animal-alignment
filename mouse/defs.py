@@ -86,7 +86,10 @@ def prep_general_mouse (df):
     df_.idx_pull_on = df_.idx_pull_on.astype(np.int32)
     df_.index = np.arange(df_.shape[0])
     # add target_id
-    df_['target_id'] = np.remainder(df_['blNumber'].to_numpy(), 4)
+    # rem = np.remainder(df_['blNumber'].to_numpy(), 4)
+    # rem[np.logical_or(rem==2 , rem ==0)] =0
+    # rem[np.logical_or(rem==1 , rem==3)]=1
+    df_['target_id'] = 0
 
     for signal in new_fields:
         df_ = pyal.remove_low_firing_neurons(df_, signal, 1)
@@ -94,8 +97,8 @@ def prep_general_mouse (df):
     df_ = pyal.select_trials(df_, df_.idx_movement_on < df_.idx_pull_on)
     df_ = pyal.select_trials(df_, df_.idx_pull_on < df_.idx_pull_off)
     # !!! discard outlier behaviour---tricky stuff !!!
-        # reach duration < 700ms
-    df_ = pyal.select_trials(df_, df_.idx_pull_on - df_.idx_movement_on < 65)
+        # reach duration < 500ms
+    df_ = pyal.select_trials(df_, df_.idx_pull_on - df_.idx_movement_on < 50)
         # pull duration < 450ms
     df_ = pyal.select_trials(df_, df_.idx_pull_off - df_.idx_pull_on < 45)
 
