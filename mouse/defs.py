@@ -151,8 +151,8 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
     n_timepoints = int(df_[field][0].shape[0])
 
     # pre-allocating the data matrix
-    AllData = np.empty((len(data_list), 4, n_shared_trial, n_timepoints, n_components))
-    AllVel  = np.empty((len(data_list), 4, n_shared_trial, n_timepoints, 3))
+    AllData = np.empty((len(data_list), n_targets, n_shared_trial, n_timepoints, n_components))
+    AllVel  = np.empty((len(data_list), n_targets, n_shared_trial, n_timepoints, 3))
     for session, df in enumerate(data_list):
         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
         rates = np.concatenate(df_[field].values, axis=0)
