@@ -129,3 +129,51 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
 def time_trim(a,b):
     l = min(a.shape[0],b.shape[0])
     return a[:l],b[:l]
+
+def _get_data_array(data_list: list[pd.DataFrame], epoch_L: int =None , area: str ='M1', model=None) -> np.ndarray:
+    "Similat to `get_data_array` only returns an apoch of length `epoch_L` randomly chosen along each trial"
+    if isinstance(data_list, pd.DataFrame):
+        data_list = [data_list]
+    if isinstance(model, int):
+        model = PCA(n_components=model, svd_solver='full')
+    
+    field = f'{area}_rates'
+    n_shared_trial = np.inf
+    target_ids = np.unique(data_list[0].target_id)
+    for df in data_list:
+        for target in target_ids:
+            df_ = pyal.select_trials(df, df.target_id== target)
+            n_shared_trial = np.min((df_.shape[0], n_shared_trial))
+
+    n_shared_trial = int(n_shared_trial)
+
+    # finding the number of timepoints
+    n_timepoints = int(df_[field][0].shape[0])
+    # n_timepoints = int(df_[field][0].shape[0])
+    if epoch_L is None:
+        epoch_L = n_timepoints
+    else:
+        assert epoch_L < n_timepoints, 'Epoch longer than data'
+    
+    # pre-allocating the data matrix
+    AllData = np.zeros((len(data_list), len(target_ids), n_shared_trial, epoch_L, model.n_components))
+
+    for session, df in enumerate(data_list):
+        rates = np.concatenate(df[field].values, axis=0)
+        rates -= np.mean(rates, axis=0)
+        rates_model = model.fit(rates)
+        df_ = pyal.apply_dim_reduce_model(df, rates_model, field, '_pca');
+
+        for targetIdx,target in enumerate(target_ids):
+            df__ = pyal.select_trials(df_, df_.target_id==target)
+            all_id = df__.trial_id.to_numpy()
+            # to guarantee shuffled ids
+            rng.shuffle(all_id)
+            # select the right number of trials to each target
+            df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
+            for trial, trial_rates in enumerate(df__._pca):
+                time_idx = rng.integers(trial_rates.shape[0]-epoch_L)
+                trial_data = trial_rates[time_idx:time_idx+epoch_L,:]
+                AllData[session,targetIdx,trial, :, :] = trial_data
+
+    return AllData
