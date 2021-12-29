@@ -86,10 +86,10 @@ def prep_general_mouse (df):
     df_.idx_pull_on = df_.idx_pull_on.astype(np.int32)
     df_.index = np.arange(df_.shape[0])
     # add target_id
-    # rem = np.remainder(df_['blNumber'].to_numpy(), 4)
-    # rem[np.logical_or(rem==2 , rem ==0)] =0
-    # rem[np.logical_or(rem==1 , rem==3)]=1
-    df_['target_id'] = 0
+    rem = np.remainder(df_['blNumber'].to_numpy(), 4)
+    rem[np.logical_or(rem==3 , rem ==0)] = 0
+    rem[np.logical_or(rem==1 , rem==2)] = 1
+    df_['target_id'] = rem
 
     for signal in new_fields:
         df_ = pyal.remove_low_firing_neurons(df_, signal, 1)
