@@ -60,7 +60,7 @@ def add_panel_caption(axes: tuple, offsetX: tuple, offsetY: tuple, **kwargs):
                     s=s,fontweight='extra bold', fontsize=10, ha='left', va='center',
                     transform=fig.transFigure,**kwargs)
         except: #to cover 3D axes
-            ax.text(x=(axbox.x0/fbox.xmax)-abs(dx), y=(axbox.y1/fbox.ymax)+abs(dy), z=0,
+            ax.text2D(x=(axbox.x0/fbox.xmax)-abs(dx), y=(axbox.y1/fbox.ymax)+abs(dy),
                     s=s,fontweight='extra bold', fontsize=10, ha='left', va='center',
                     transform=fig.transFigure,**kwargs)
             
