@@ -55,10 +55,15 @@ def add_panel_caption(axes: tuple, offsetX: tuple, offsetY: tuple, **kwargs):
     fbox=fig.bbox
     for ax,dx,dy,s in zip(axes,offsetX,offsetY,string.ascii_uppercase):
         axbox=ax.get_window_extent()
-
-        ax.text(x=(axbox.x0/fbox.xmax)-abs(dx), y=(axbox.y1/fbox.ymax)+abs(dy),
-                s=s,fontweight='extra bold', fontsize=10, ha='left', va='center',
-               transform=fig.transFigure,**kwargs)
+        try:
+            ax.text(x=(axbox.x0/fbox.xmax)-abs(dx), y=(axbox.y1/fbox.ymax)+abs(dy),
+                    s=s,fontweight='extra bold', fontsize=10, ha='left', va='center',
+                    transform=fig.transFigure,**kwargs)
+        except: #to cover 3D axes
+            ax.text(x=(axbox.x0/fbox.xmax)-abs(dx), y=(axbox.y1/fbox.ymax)+abs(dy), z=0,
+                    s=s,fontweight='extra bold', fontsize=10, ha='left', va='center',
+                    transform=fig.transFigure,**kwargs)
+            
 
 
 def load_unit_depth(df, field='depthCtx'):
