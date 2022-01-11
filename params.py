@@ -1,4 +1,5 @@
 import pathlib
+import string
 import matplotlib
 import numpy as np
 
@@ -15,6 +16,7 @@ MedFig = (4.3,4.3)
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 n_iter = 100
 Behav_corr_TH = 0.5
+
 
 def set_rc_params(dictArg:dict ={}):
     matplotlib.rcParams['backend']   = 'PDF'
@@ -40,6 +42,24 @@ def set_rc_params(dictArg:dict ={}):
     
     for key,val in dictArg.items():
         matplotlib.rcParams[key] = val
+
+
+def add_panel_caption(axes: tuple, offsetX: tuple, offsetY: tuple, **kwargs):
+    """
+    This function adds letter captions (a,b,c,d) to Axes in axes
+    at top left, with the specified offset, in RELATIVE figure coordinates
+    """
+    assert len(axes)==len(offsetX)==len(offsetY), 'Bad input!'
+
+    fig=axes[0].get_figure()
+    fbox=fig.bbox
+    for ax,dx,dy,s in zip(axes,offsetX,offsetY,string.ascii_uppercase):
+        axbox=ax.get_window_extent()
+
+        ax.text(x=(axbox.x0/fbox.xmax)-abs(dx), y=(axbox.y1/fbox.ymax)+abs(dy),
+                s=s,fontweight='extra bold', fontsize=10, ha='left', va='center',
+               transform=fig.transFigure,**kwargs)
+
 
 def load_unit_depth(df, field='depthCtx'):
     """
