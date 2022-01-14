@@ -83,7 +83,7 @@ def load_unit_depth(df, field='depthCtx'):
 class panels:
     "sizes of different panels in the paper"
     TinyH = 0.5
-    SmallH = 1.5
+    SmallH = 1.2
     MedH = SmallH + TinyH
     BigH = 3
     
