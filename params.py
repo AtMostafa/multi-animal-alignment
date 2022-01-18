@@ -104,3 +104,5 @@ class colors:
     MonkeyPts = 'xkcd:brown'
     MousePts = 'xkcd:violet'
     UniversalDecoder = 'goldenrod'
+    LeftTrial = (0,1,0,1)
+    RightTrial = (1,0,0,1)
