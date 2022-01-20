@@ -6,8 +6,8 @@ from functools import wraps
 
 def phantom_axes(ax):
     "Make an axes invisible"
-    ax.xaxis.set_visible(False)
-    ax.yaxis.set_visible(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
     [ax.spines[key].set_visible(False) for key in ax.spines.keys()]
     ax.set_facecolor('None')
     ax.set_alpha(0)
