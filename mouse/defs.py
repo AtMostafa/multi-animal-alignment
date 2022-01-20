@@ -18,7 +18,7 @@ WINDOW_prep = (-.4, .05)  # sec
 WINDOW_exec = (-.05, .4)  # sec
 n_components = 10  # min between M1 and Str
 areas = ('M1', 'Str')
-n_targets = 1
+n_targets = 2
 
 prep_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_prep[0]/BIN_SIZE),
