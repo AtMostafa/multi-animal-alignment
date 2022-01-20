@@ -21,23 +21,23 @@ Behav_corr_TH = 0.5
 def set_rc_params(dictArg:dict ={}):
     matplotlib.rcParams['backend']   = 'PDF'
     matplotlib.rcParams['lines.markersize'] = 4
-    matplotlib.rcParams['xtick.major.pad'] = 1
-    matplotlib.rcParams['ytick.major.pad'] = 1
-    matplotlib.rcParams['axes.labelpad']   = 2
-    matplotlib.rcParams['axes.titlepad']   = 5
-    matplotlib.rcParams['font.size']   = 8
+    matplotlib.rcParams['xtick.major.pad']  = 1
+    matplotlib.rcParams['ytick.major.pad']  = 1
+    matplotlib.rcParams['axes.labelpad']    = 2
+    matplotlib.rcParams['axes.titlepad']    = 5
+    matplotlib.rcParams['font.size']        = 8
     matplotlib.rcParams['axes.titlesize']   = 8
     matplotlib.rcParams['axes.labelsize']   = 8
-    matplotlib.rcParams['xtick.labelsize']   = 6.5
-    matplotlib.rcParams['ytick.labelsize']   = 6.5
-    matplotlib.rcParams['legend.fontsize']   = 6.5
+    matplotlib.rcParams['xtick.labelsize']  = 6.5
+    matplotlib.rcParams['ytick.labelsize']  = 6.5
+    matplotlib.rcParams['legend.fontsize']  = 6.5
     matplotlib.rcParams['legend.title_fontsize']   = 6.5
-    matplotlib.rcParams['text.usetex'] = True
-    matplotlib.rcParams['font.family'] = 'sans-serif'
-    matplotlib.rcParams['font.serif'] = 'Helvetica'
-    matplotlib.rcParams['legend.frameon'] = False
-    matplotlib.rcParams['legend.fancybox'] = False
-    matplotlib.rcParams['figure.dpi'] = 600
+    matplotlib.rcParams['text.usetex']      = True
+    matplotlib.rcParams['font.family']      = 'sans-serif'
+    matplotlib.rcParams['font.serif']       = 'Helvetica'
+    matplotlib.rcParams['legend.frameon']   = False
+    matplotlib.rcParams['legend.fancybox']  = False
+    matplotlib.rcParams['figure.dpi']       = 600
     
     
     for key,val in dictArg.items():
