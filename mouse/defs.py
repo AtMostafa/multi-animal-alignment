@@ -11,6 +11,7 @@ import pyaldata as pyal
 
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 
+_example = ('js2p0_tbytSpkHandJsTrj10msBin_WR44_031020_ss.p', 'js2p0_tbytSpkHandJsTrj10msBin_WR39_100219_ss.p')
 MAX_HISTORY = 3  #int: no of bins to be added as history
 BIN_SIZE = .03  # sec
 WINDOW_ctrl = (-.95, -.5)
