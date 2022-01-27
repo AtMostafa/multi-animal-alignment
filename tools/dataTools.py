@@ -196,6 +196,43 @@ def VAF_pc_cc (X: np.ndarray, C: np.ndarray, A: np.ndarray) -> np.ndarray:
     VAFs = np.array([VAFs[0],*np.diff(VAFs)])
     return VAFs
 
+def VAF_pyal(df1:pd.DataFrame, field1: str, epoch1,
+               df2:pd.DataFrame, field2: str, epoch2,
+               n_components:int =10) -> (np.ndarray, np.ndarray):
+    """
+    Measure VAF for each CCA axis, between 2 DataFrames, fields, time epochs.
+    epoch1, epoch2: an instance of the `pyal.generate_epoch_fun` function.
+    """
+ 
+    df1 = pyal.restrict_to_interval(df1,epoch_fun=epoch1)
+    rates_1 = np.concatenate(df1[field1].values, axis=0)
+    rates_1 -= np.mean(rates_1,axis=0)
+    rates_1_model = PCA(n_components=n_components, svd_solver='full').fit(rates_1)
+    rates_1_C = rates_1_model.components_
+    df1 = pyal.apply_dim_reduce_model(df1, rates_1_model, field1, '_pca');
+    pca_1_data = np.concatenate(df1['_pca'].values, axis=0)
+
+    
+    df2 = pyal.restrict_to_interval(df2, epoch_fun=epoch2)
+    rates_2 = np.concatenate(df2[field2].values, axis=0)
+    rates_2 -= np.mean(rates_2,axis=0)
+    rates_2_model = PCA(n_components=n_components, svd_solver='full').fit(rates_2)
+    rates_2_C = rates_2_model.components_
+    df2 = pyal.apply_dim_reduce_model(df2, rates_2_model, field2, '_pca');
+    pca_2_data = np.concatenate(df2['_pca'].values, axis=0)
+    
+    
+    # same number of timepoints in both matrices
+    n_samples = min ([pca_1_data.shape[0], pca_2_data.shape[0]])
+    pca_1_data = pca_1_data[:n_samples,:]
+    pca_2_data = pca_2_data[:n_samples,:]
+
+    A, B, *_ = canoncorr(pca_1_data, pca_2_data, fullReturn=True)
+    VAFs1 = VAF_pc_cc(rates_1, rates_1_C, A)
+    VAFs2 = VAF_pc_cc(rates_2, rates_2_C, B)
+    
+    return VAFs1, VAFs2
+
 def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1, target1: int,
                    df2:pd.DataFrame, field2: str, epoch2, target2: int,
                    n_components:int =10) -> (np.ndarray, np.ndarray):
