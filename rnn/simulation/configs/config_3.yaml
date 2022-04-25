@@ -1,0 +1,30 @@
+data:
+  datadir: null
+  datafile: dataset_chewie_bl0
+gpu_id: 0
+logging:
+  log_epochs: null
+  log_interval: null
+  log_model: false
+neurons:
+  g1: 1.2
+  gin: 0.1
+  gout: 0.1
+  n1: 300
+  noise: 0.2
+  tau: 0.05
+outdir: null
+regularization:
+  alpha1: 0.001
+  beta1: 0.8
+  clipgrad: 0.2
+  delta: 1.0
+  gamma1: 0.001
+seed: 20
+simulation:
+  sim_number: null
+timestamp: null
+training:
+  batch_size: 64
+  lr: 0.0005
+  training_trials: 300
