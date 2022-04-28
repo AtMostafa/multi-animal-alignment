@@ -110,7 +110,6 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
     for session, df in enumerate(data_list):
         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
         rates = np.concatenate(df_[field].values, axis=0)
-        rates -= np.mean(rates, axis=0)
         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
 
@@ -160,7 +159,6 @@ def _get_data_array(data_list: list[pd.DataFrame], epoch_L: int =None , area: st
 
     for session, df in enumerate(data_list):
         rates = np.concatenate(df[field].values, axis=0)
-        rates -= np.mean(rates, axis=0)
         rates_model = model.fit(rates)
         df_ = pyal.apply_dim_reduce_model(df, rates_model, field, '_pca');
 

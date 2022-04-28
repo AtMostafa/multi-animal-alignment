@@ -206,7 +206,6 @@ def VAF_pyal(df1:pd.DataFrame, field1: str, epoch1,
  
     df1 = pyal.restrict_to_interval(df1,epoch_fun=epoch1)
     rates_1 = np.concatenate(df1[field1].values, axis=0)
-    rates_1 -= np.mean(rates_1,axis=0)
     rates_1_model = PCA(n_components=n_components, svd_solver='full').fit(rates_1)
     rates_1_C = rates_1_model.components_
     df1 = pyal.apply_dim_reduce_model(df1, rates_1_model, field1, '_pca');
@@ -215,7 +214,6 @@ def VAF_pyal(df1:pd.DataFrame, field1: str, epoch1,
     
     df2 = pyal.restrict_to_interval(df2, epoch_fun=epoch2)
     rates_2 = np.concatenate(df2[field2].values, axis=0)
-    rates_2 -= np.mean(rates_2,axis=0)
     rates_2_model = PCA(n_components=n_components, svd_solver='full').fit(rates_2)
     rates_2_C = rates_2_model.components_
     df2 = pyal.apply_dim_reduce_model(df2, rates_2_model, field2, '_pca');
@@ -247,7 +245,6 @@ def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1, target1: int,
  
     df1 = pyal.restrict_to_interval(df1,epoch_fun=epoch1)
     rates_1 = np.concatenate(df1[field1].values, axis=0)
-    rates_1 -= np.mean(rates_1,axis=0)
     rates_1_model = PCA(n_components=n_components, svd_solver='full').fit(rates_1)
     rates_1_C = rates_1_model.components_
     df1 = pyal.apply_dim_reduce_model(df1, rates_1_model, field1, '_pca');
@@ -259,7 +256,6 @@ def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1, target1: int,
     
     df2 = pyal.restrict_to_interval(df2, epoch_fun=epoch2)
     rates_2 = np.concatenate(df2[field2].values, axis=0)
-    rates_2 -= np.mean(rates_2,axis=0)
     rates_2_model = PCA(n_components=n_components, svd_solver='full').fit(rates_2)
     rates_2_C = rates_2_model.components_
     df2 = pyal.apply_dim_reduce_model(df2, rates_2_model, field2, '_pca');
@@ -294,11 +290,9 @@ def VAF_pc_cc_pyal2(df1:pd.DataFrame, field1: str, epoch1, target1: int,
  
     df1_ = pyal.restrict_to_interval(df1,epoch_fun=epoch1)
     rates_1 = np.concatenate(df1_[field1].values, axis=0)
-    rates_1 -= np.mean(rates_1,axis=0)
 
     df2_ = pyal.restrict_to_interval(df2, epoch_fun=epoch2)
     rates_2 = np.concatenate(df2_[field2].values, axis=0)
-    rates_2 -= np.mean(rates_2,axis=0)
     
     # PCA
     ## check for `n`
@@ -465,7 +459,6 @@ def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: 
     for session, df in enumerate(data_list):
         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch) if epoch is not None else df
         rates = np.concatenate(df_[field].values, axis=0)
-        rates -= np.mean(rates, axis=0)
         rates_model = model.fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
 
