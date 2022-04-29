@@ -7,7 +7,7 @@ logging:
   log_interval: null
   log_model: false
 neurons:
-  g1: 1.2
+  g1: 5.0
   gin: 0.1
   gout: 0.1
   n1: 300
@@ -24,7 +24,7 @@ regularization:
   ccareg_start_trial: 0
   ccareg_type: sum_squared
   clipgrad: 0.2
-  delta: 0.5
+  delta: 1.0
   gamma1: 0.001
   pcas_file: ''
   rel_end: 40

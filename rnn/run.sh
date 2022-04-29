@@ -1,10 +1,10 @@
 # !/bin/bash
 
 export seed_str='1000010 1000011 1000012 1000013 1000014 1000015 1000016 1000017 1000018 1000019'
-export seed_str='0 1 2 3 4 5 6 7 8 9'
+export seed_str='2 3 8 9'
 export sds=($seed_str)
 export nseeds=${#sds[@]}
-export threads=4
+export threads=2
 export incr=$((nseeds / threads))
 
 for ((i=0;i<$threads;i++)); 
@@ -14,11 +14,14 @@ do
     'seeds=($seed_str)
     for seed in ${seeds[@]:$((i*incr)):$(((i+1)*incr))}
     do
-        for sim_number in $(seq 19 34)
+        for sim_number in 31 20 22 24
         do
             python3 simulation/run_pipeline.py 100001$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0pos
-            python3 save_pca.py $sim_number
-            python3 simulation/run_pipeline.py 100002$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0pos -cca pca_movement_on_exec_1000010_$sim_number
+            # python3 save_pca.py $sim_number
+            # python3 simulation/run_pipeline.py 100002$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0pos -cca pca_movement_on_exec_1000010_$sim_number
+            # python3 simulation/run_pipeline.py 100003$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0pos -cca pca_movement_on_1000010_$sim_number
+            # python3 simulation/run_pipeline.py 100004$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0pos -cca pca_movement_on_prep_exec_1000010_$sim_number -a rel_start -40
+            # python3 simulation/run_pipeline.py 100005$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0_onehot -cca pca_movement_on_prep_exec_1000010_$sim_number -a rel_start -40
         done
     done'
 done

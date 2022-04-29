@@ -41,6 +41,7 @@ for i, gin in enumerate([0.1,0.01]):
                         'gin': gin,
                         'noise': noise,
                         'p_recurrent': p_recurrent,
+                        'delta': 0.5
                     }
                 else:
                     changes_dict = {
@@ -50,7 +51,17 @@ for i, gin in enumerate([0.1,0.01]):
                         'gin': gin,
                         'noise': noise,
                         'p_recurrent': p_recurrent,
+                        'delta': 0.5
                     }
                 create_config(n_simulation,changes_dict = changes_dict)
                 n_simulation += 1
+# %%
+#g1, gout, delta
+
+changes_dict = {'gout': 1.0}
+create_config(35,changes_dict = changes_dict)
+
+changes_dict = {'g1': 5.0}
+create_config(36,changes_dict = changes_dict)
+
 # %%

@@ -311,10 +311,6 @@ class Runner:
         for trial in range(testl1.shape[0]):
             cue = onsets[trial]
             testl1_interval[trial] = testl1[trial, :, (cue + rel_start):(cue + rel_end +1)].T
-        
-        # subtract cross condition mean #why does this make a difference?
-        # mean = torch.mean(testl1_interval, 0)
-        # testl1_interval = testl1_interval - mean
 
         #calculate pca
         pca_dims = rnn_defs.n_components

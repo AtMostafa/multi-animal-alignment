@@ -57,6 +57,11 @@ def get_args():
         help = "whether to use cca regularization, with path to calculated pcas", 
         nargs='?', const='c'
     )
+    parser.add_argument(
+        '-a', '--argument', 
+        help = "change given argument", 
+        nargs='+'
+    )
 
     args = parser.parse_args()
 
@@ -121,6 +126,14 @@ def get_config(args):
     if args.ccareg:
         configuration.amend_property(property_name="ccareg", new_property_value=True)
         configuration.amend_property(property_name="pcas_file", new_property_value=args.ccareg)
+    if args.argument:
+        print(args.argument)
+        assert (len(args.argument)%2 == 0)
+        for _ in range(len(args.argument)//2):
+            name = args.argument.pop(0)
+            value = args.argument.pop(0)
+            print(name, value)
+            configuration.amend_property(property_name=name, new_property_value=int(value)) #TODO: delete this
     if args.gpu_id:
         configuration.amend_property(property_name="gpu_id", new_property_value=args.gpu_id)
 #         print("gpu", args.gpu_id)

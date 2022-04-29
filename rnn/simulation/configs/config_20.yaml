@@ -24,7 +24,7 @@ regularization:
   ccareg_start_trial: 0
   ccareg_type: sum_squared
   clipgrad: 0.2
-  delta: 1.0
+  delta: 0.5
   gamma1: 0.0
   pcas_file: ''
   rel_end: 40
