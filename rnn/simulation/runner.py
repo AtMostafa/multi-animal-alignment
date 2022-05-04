@@ -408,11 +408,12 @@ class Runner:
                 lc.append([train_running_loss])
 
                 training_trial += 1 
-                # if training_trial >= rnn_defs.MAX_TRAINING_TRIALS: #train for at least 100 trials
-                # if (np.mean(np.array(lc)[-10:,0]) <= rnn_defs.LOSS_THRESHOLD) or \
-                if (training_trial >= rnn_defs.MAX_TRAINING_TRIALS):
-                    finished_training = True
-                    break
+                # max training trial in 100002
+                if training_trial >= rnn_defs.MIN_TRAINING_TRIALS: #train for at least n trials
+                    if (np.mean(np.array(lc)[-10:,0]) <= rnn_defs.LOSS_THRESHOLD) or \
+                     (training_trial >= rnn_defs.MAX_TRAINING_TRIALS):
+                        finished_training = True
+                        break
         return lc, training_trial
 
     def _log(self, epoch, loss, toprint):

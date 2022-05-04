@@ -1,7 +1,5 @@
 #%%
 from random import sample
-import subprocess
-import params
 import pyaldata as pyal
 from params import rnn_defs
 from tools import simTools as st
@@ -11,7 +9,8 @@ import sys
 
 # %%
 sim_number = int(sys.argv[1])
-seed = rnn_defs.SEEDS1[0]
+# seed = rnn_defs.SEEDS1[0]
+seed = 1000020
 
 rnn_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on', 
                                      rel_start=-5,rel_end = 40)

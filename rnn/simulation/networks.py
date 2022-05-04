@@ -21,9 +21,7 @@ class RNN(nn.Module):
             self.noisy = True
             self.noise_amp = noise
 
-        #recurrent and output layers
-
-        #ADDED ######################
+        #recurrent layer
         self.rnn_l1 = nn.RNN(n_inputs, n_neurons, num_layers=1,
                                 nonlinearity='tanh', bias=True) 
         self.rnn_l1_hh_mask = torch.rand(n_neurons, n_neurons).type(dtype) < p_recurrent
@@ -32,11 +30,8 @@ class RNN(nn.Module):
         #freeze input bias
         self.rnn_l1.bias_hh_l0.requires_grad = False
 
+        #output layer
         self.output = nn.Linear(n_neurons, n_outputs)
-
-        #freeze output weights
-        # self.output.weight.requires_grad = False
-        # self.output.bias.requires_grad = False
 
     def save_parameters(self):
         '''
