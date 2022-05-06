@@ -20,11 +20,12 @@ class Task_Dataset(Dataset):
 
     def __init__(self, datadir, training = True):
         """
-        Args:
-            datadir: string
-                Path to the .npy file with data file
-            training: boolean
-                whether you are training the network
+        Parameters
+        ----------
+        datadir: string
+            Path to the .npy file with data file
+        training: boolean
+            whether you are training the network
         """
         info = np.load(datadir+'.npy',allow_pickle = True).item()
 
@@ -33,12 +34,10 @@ class Task_Dataset(Dataset):
         else:
             self.data = info['test_set1']
         self.output_dim = info['params']['output_dim']
-        self.go_onset = torch.from_numpy(self.data['go_onset'])
         self.stimulus = torch.from_numpy(self.data['stimulus'])
         self.target = torch.from_numpy(self.data['target'][:,:,:self.output_dim])
         self.labels = torch.from_numpy(self.data['target_param'])
         
-
     def __len__(self):
         return self.stimulus.shape[0]
 
@@ -46,9 +45,8 @@ class Task_Dataset(Dataset):
 
         stim_idx = self.stimulus[idx]
         target_idx = self.target[idx]
-        go_onset = self.go_onset[idx]
 
-        return stim_idx, target_idx, go_onset
+        return stim_idx, target_idx
 
     def get_stimulus(self):
         return self.stimulus

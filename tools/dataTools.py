@@ -553,10 +553,9 @@ def warp_time (a:np.ndarray, b:np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 def canoncorr_torch(X:torch.Tensor, Y: torch.Tensor) -> torch.Tensor:
     """
-    Canonical Correlation Analysis (CCA)
-    line-by-line port from Matlab implementation of `canoncorr`
+    Canonical Correlation Analysis (CCA) using torch
+    adapted from `canoncorr`, does not do fullReturn
     X,Y: (samples/observations) x (features) matrix, for both: X.shape[0] >> X.shape[1]
-    fullReturn: whether all outputs should be returned or just `r` be returned (not in Matlab)
     
     r:   Canonical correlations
     
@@ -568,11 +567,7 @@ def canoncorr_torch(X:torch.Tensor, Y: torch.Tensor) -> torch.Tensor:
     if p1 >= n or p2 >= n:
         logging.warning('Not enough samples, might cause problems')
 
-    # Center the variables #why does this matter
-    # X = X - torch.mean(X,0);
-    # Y = Y - torch.mean(Y,0);
-    # print(torch.mean(X,0))
-    # print(torch.mean(Y,0))
+    #NOTE: removed centering since it did not work with backprop
 
     # Factor the inputs, and find a full rank set of columns if necessary
     Q1,T11 = torch.linalg.qr(X, mode='reduced')
@@ -583,6 +578,7 @@ def canoncorr_torch(X:torch.Tensor, Y: torch.Tensor) -> torch.Tensor:
     Q1 = Q1[:,:rankX];
     Q2 = Q2[:,:rankY];
 
+    # Canonical correlations
     r = torch.linalg.svdvals(Q1.T @ Q2) 
 
     return r

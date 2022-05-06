@@ -42,17 +42,6 @@ def get_args():
         help = "gpu to use", 
         )
     parser.add_argument(
-        '-e', '--log_epochs', 
-        type =int,
-        help = "epochs for logging model", 
-        nargs = '+'
-        )
-    parser.add_argument(
-        '-i', '--log_interval', 
-        type =int,
-        help = "interval for logging model", 
-        )
-    parser.add_argument(
         '-cca', '--ccareg', 
         help = "whether to use cca regularization, with path to calculated pcas", 
         nargs='?', const='c'
@@ -163,16 +152,9 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     _, output, _ = runner.run_test(model_loaded = True)
 
+    # check training
     plt.figure()
-    use_velocities = runner.task_params.use_velocities
-    if use_velocities:
-        dt = runner.task_params.dt
-        positions = np.zeros(output.shape)
-        for j in range(output.shape[1]):
-            positions[:,j,:] = positions[:,j-1,:] + output[:,j,:]*dt
-        graph_position(positions)
-    else:
-        graph_position(output)
+    graph_position(output)
     plt.savefig(config.outdir + "output.png")
 
     endtime = time.time()

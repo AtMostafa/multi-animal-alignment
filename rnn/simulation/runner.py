@@ -104,8 +104,7 @@ class Runner:
         params1 = self.model.save_parameters()
 
         # save parameters
-        dic = {'lc':np.array(lc), 'params1':params1,
-                'finished_training': training_trial < rnn_defs.MAX_TRAINING_TRIALS}
+        dic = {'lc':np.array(lc), 'params1':params1}
         np.save(self._outdir+'training',dic)
 
         # save the final model after training
@@ -144,13 +143,15 @@ class Runner:
 
         # initialize weights
         state_dict = model.state_dict()
+
         ## input weights
         state_dict['rnn_l1.weight_ih_l0'] = torch.FloatTensor((np.random.rand(n1, self.task_params.input_dim)-0.5)*2.*self._config.gin) 
-        state_dict['rnn_l1.bias_hh_l0'] = torch.FloatTensor(np.zeros(self.task_params.input_dim)) #ADDED
+        state_dict['rnn_l1.bias_hh_l0'] = torch.FloatTensor(np.zeros(self.task_params.input_dim)) 
 
         ## recurrent weights
         state_dict['rnn_l1.weight_hh_l0'] = torch.FloatTensor(self._config.g1 / np.sqrt(n1) * np.random.randn(n1,n1)) 
-        state_dict['rnn_l1.bias_hh_l0'] = torch.FloatTensor(np.zeros(n1)) #ADDED
+        state_dict['rnn_l1.bias_hh_l0'] = torch.FloatTensor(np.zeros(n1)) 
+
         ## output weights
         state_dict['output.weight'] = torch.FloatTensor((np.random.rand(self.task_params.output_dim, n1)-0.5)*2.*self._config.gout) 
         state_dict['output.bias'] = torch.FloatTensor(np.zeros(self.task_params.output_dim))
@@ -158,7 +159,7 @@ class Runner:
         model.load_state_dict(state_dict, strict=True)
         return model
 
-    def run_test(self, epoch=None, model_loaded = False):
+    def run_test(self, model_loaded = False):
         """ 
         Set up and test an existing model. 
 
@@ -166,6 +167,8 @@ class Runner:
         ----------
         epoch: int
             epoch that model was saved at during training
+        model_loaded: boolean
+            if the model has been loaded with parameters
 
         Returns
         ---------- 
@@ -176,7 +179,7 @@ class Runner:
 
         """
         if not model_loaded:
-            self.model = self._load_model(self._outdir, self.model, epoch)
+            self.model = self._load_model(self._outdir, self.model)
         testout, testl1 = self.test_current_model()
 
         # save it
@@ -188,6 +191,14 @@ class Runner:
     def _setup_testdata(self):
         """ 
         Set up data for testing 
+
+        Returns
+        -------
+        test_stimulus: torch tensor
+            stimulus input in torch format
+        test_target: torch tensor
+            target information in torch format
+
         """
         # get data
         test_data = Task_Dataset(self.PROJ_DIR + self._config.datadir, training=False)
@@ -217,7 +228,7 @@ class Runner:
 
         return testout, testl1
 
-    def _load_model(self, dir, model, epoch=None):
+    def _load_model(self, dir, model):
         """ 
         Load state parameters in model.
 
@@ -236,14 +247,12 @@ class Runner:
             model with trained parameters
 
         """
-        epoch_str = ('_'+str(epoch)) if epoch is not None else ""
         try:
-            temp = torch.load(dir+'model'+ epoch_str)['model_state_dict']
+            temp = torch.load(dir+'model')['model_state_dict']
         except: # make sure model is loaded in available device
-            temp = torch.load(dir+'model'+ epoch_str, map_location='cuda:0')['model_state_dict']
+            temp = torch.load(dir+'model', map_location='cuda:0')['model_state_dict']
         model.load_state_dict(temp, strict = False)
 
-        #ADDED
         try:
             parameters = np.load(dir + 'training.npy', allow_pickle=True).item()['params1']
             model.rnn_l1_hh_mask = torch.FloatTensor(parameters['whhl1_mask']).type(self.dtype)
@@ -281,53 +290,71 @@ class Runner:
 
         return optimizer
     
-    def cca_reg(self, testl1, pcas_calculated, onsets, dt):
+    def cca_penalisation(self, rl1, pcas_calculated, onsets, dt):
+        """ 
+        Calculate CCA penalisation to discourage similar latent dynamics
+
+        Parameters
+        ----------
+        rl1: torch tensor
+            network activity
+        pcas_calculated: torch tensor
+            principal components calculated from a previously trained network
+        onsets: torch tensor
+            movement onsets
+        dt: float
+            integration time step
+
+        Returns
+        -------
+        cca_pen: float
+            CCA penalisation term 
+
+        """
         import torch.nn.functional as F
         from tools.dataTools import canoncorr_torch
         from kornia.filters.kernels import get_gaussian_kernel1d
 
-        tsteps, batch_size, n_neurons = testl1.shape
+        tsteps, batch_size, n_neurons = rl1.shape
 
         #smooth signals
         ##setup signals: batch, neurons, tsteps
-        testl1 = torch.flatten(testl1.permute(1,2,0), 0,1)
-        testl1 = testl1.unsqueeze(0).permute(1,0,2)
+        rl1 = torch.flatten(rl1.permute(1,2,0), 0,1)
+        rl1 = rl1.unsqueeze(0).permute(1,0,2)
         ##get smoothing window
         std = 0.05
         bin_length = dt
         sigma = std/bin_length
         kernel_size =int(10*sigma)
         win = get_gaussian_kernel1d(kernel_size, sigma, force_even = True).unsqueeze(0).unsqueeze(0).type(self.dtype)
-        
         ##convolve
-        testl1 = F.pad(testl1, (int(kernel_size/2), int(kernel_size/2)-1), mode='reflect')
-        testl1 = F.conv1d(testl1.double(), win.double())
-        testl1 = testl1.reshape(batch_size, n_neurons, tsteps)
+        rl1 = F.pad(rl1, (int(kernel_size/2), int(kernel_size/2)-1), mode='reflect')
+        rl1 = F.conv1d(rl1.double(), win.double())
+        rl1 = rl1.reshape(batch_size, n_neurons, tsteps)
 
         #restrict to interval
         rel_start = self._config.rel_start
         rel_end = self._config.rel_end
-        testl1_interval = torch.zeros((batch_size, rel_end - rel_start + 1, n_neurons))
-        for trial in range(testl1.shape[0]):
+        rl1_interval = torch.zeros((batch_size, rel_end - rel_start + 1, n_neurons))
+        for trial in range(rl1.shape[0]):
             cue = onsets[trial]
-            testl1_interval[trial] = testl1[trial, :, (cue + rel_start):(cue + rel_end +1)].T
+            rl1_interval[trial] = rl1[trial, :, (cue + rel_start):(cue + rel_end +1)].T
 
-        #calculate pca
+        #calculate PCA
         pca_dims = rnn_defs.n_components
-        testl1_interval = torch.flatten(testl1_interval,0,1)
-        _,_,v = torch.pca_lowrank(testl1_interval, q=pca_dims)
-        pca = torch.matmul(testl1_interval, v[:, :pca_dims])
+        rl1_interval = torch.flatten(rl1_interval,0,1)
+        _,_,v = torch.pca_lowrank(rl1_interval, q=pca_dims)
+        pca = torch.matmul(rl1_interval, v[:, :pca_dims])
 
+        #perform CCA on PCs
         ccs = canoncorr_torch(pca, pcas_calculated)
-        # ccs = torch.zeros(pcas_calculated.shape[0], pca_dims)
-        # for i, pca_calc in enumerate(pcas_calculated):
-        #     ccs[i] = canoncorr_torch(pca, pca_calc)
-        # #cc shape: seeds * ccs
+
+        #calculate penalisation on subset of CCs
         start = self._config.ccareg_components_start
         end = self._config.ccareg_components_end
-        cca_reg = torch.sum(ccs[start-1:end]**2)#3 all trials, *0.1
+        cca_pen = torch.sum(ccs[start-1:end]**2)
 
-        return cca_reg
+        return cca_pen
             
 
     def train(self):
@@ -347,19 +374,18 @@ class Runner:
         #training mode
         self.model.train()
  
+        # load pcas if penalising CCs
         if self._config.ccareg:
             dict_ = np.load(self.PROJ_DIR + rnn_defs.RESULTS_FOLDER + self._config.pcas_file + '.npy', allow_pickle = True).item()
             pcas_calculated = torch.from_numpy(dict_['pca'])
             move_onsets = torch.from_numpy(dict_['move_onsets'])
 
         while (not finished_training):
-
             train_running_loss = 0.0
-            # self.optimizer.zero_grad()
             
             #batches include equal numbers of trials for each target
             sampler = MPerClassSampler(self.dataset.labels,  self._config.batch_size/8, batch_size = self._config.batch_size)
-            for batch_idx, (stimulus, target, go_onset) in enumerate(DataLoader(self.dataset, drop_last = True, batch_size = self._config.batch_size, sampler = sampler)):                
+            for batch_idx, (stimulus, target) in enumerate(DataLoader(self.dataset, drop_last = True, batch_size = self._config.batch_size, sampler = sampler)):                
                 self.optimizer.zero_grad()
 
                 stimulus, target = stimulus.transpose(1,0).type(self.dtype), target.transpose(1,0).type(self.dtype)
@@ -377,10 +403,9 @@ class Runner:
                 ## term 2: rates
                 reg1act = self._config.beta1*rl1.pow(2).mean()
                 
-                ## minimize CCA
+                ## penalise CCA
                 if self._config.ccareg & (training_trial >= self._config.ccareg_start_trial):
-                # if self._config.ccareg & (training_trial >= 10):
-                    regcca = self._config.delta * self.cca_reg(rl1, pcas_calculated, move_onsets, self.task_params.dt)
+                    regcca = self._config.delta * self.cca_penalisation(rl1, pcas_calculated, move_onsets, self.task_params.dt)
                 else:
                     regcca = 0
 
@@ -404,20 +429,19 @@ class Runner:
                 toprint['R_l1rec'] = reg1rec
                 toprint['R_l1rate'] = reg1act
                 toprint['R_cca'] = regcca
-                self._log(training_trial, loss, toprint)          
+                self._log(training_trial, toprint)          
                 lc.append([train_running_loss])
 
                 training_trial += 1 
-                # max training trial in 100002
-                if training_trial >= rnn_defs.MIN_TRAINING_TRIALS: #train for at least n trials
-                    # print(np.array(lc)[-10:,0])
+                if training_trial >= rnn_defs.MIN_TRAINING_TRIALS: #train for at least n trials...
                     if (np.mean(np.array(lc)[-10:,0]) <= rnn_defs.LOSS_THRESHOLD) or \
-                     (training_trial >= rnn_defs.MAX_TRAINING_TRIALS):
+                     (training_trial >= rnn_defs.MAX_TRAINING_TRIALS): #...and up to m trials
                         finished_training = True
                         break
+
         return lc, training_trial
 
-    def _log(self, epoch, loss, toprint):
+    def _log(self, epoch, toprint):
         """ 
         Log and save information during training. 
 
@@ -432,7 +456,6 @@ class Runner:
 
         """
         if epoch % rnn_defs.PRINT_EPOCH == 0:
-            # print(('Epoch=%d | '%(epoch)) + "%s=%.4f"%("Loss", loss_train))
             print(('Epoch=%d | '%(epoch)) +" | ".join("%s=%.4f"%(k, v) for k, v in toprint.items()))
 
         # save model if epoch falls on interval or was specified
