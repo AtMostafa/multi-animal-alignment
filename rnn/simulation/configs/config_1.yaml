@@ -12,14 +12,23 @@ neurons:
   gout: 0.1
   n1: 300
   noise: 0.1
+  p_recurrent: 1.0
   tau: 0.05
 outdir: null
 regularization:
-  alpha1: 0.001
-  beta1: 0.5
+  alpha1: 0.0
+  beta1: 0.0
+  ccareg: false
+  ccareg_components_end: 4
+  ccareg_components_start: 1
+  ccareg_start_trial: 0
+  ccareg_type: sum_squared
   clipgrad: 0.2
-  delta: 1.0
-  gamma1: 0.001
+  delta: 0.5
+  gamma1: 0.0
+  pcas_file: ''
+  rel_end: 40
+  rel_start: -5
 seed: 20
 simulation:
   sim_number: null

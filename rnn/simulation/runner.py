@@ -410,6 +410,7 @@ class Runner:
                 training_trial += 1 
                 # max training trial in 100002
                 if training_trial >= rnn_defs.MIN_TRAINING_TRIALS: #train for at least n trials
+                    # print(np.array(lc)[-10:,0])
                     if (np.mean(np.array(lc)[-10:,0]) <= rnn_defs.LOSS_THRESHOLD) or \
                      (training_trial >= rnn_defs.MAX_TRAINING_TRIALS):
                         finished_training = True

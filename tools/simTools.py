@@ -1,3 +1,4 @@
+from pickle import FALSE
 from rnn.test import test_model
 import os
 import pyaldata as pyal
@@ -30,6 +31,20 @@ def get_colormap(categories, cmap = 'plasma_r', unique=False, truncate = True):
 
 def get_data(datadir):
     return np.load(datadir+'.npy',allow_pickle = True).item()
+
+
+def get_mse(seeds,sim):
+    mses = []
+    for seed in seeds:
+        outdir = get_outdir(seed, sim)
+        datadir, output, _ = test_model(outdir)
+        datadir = rnn_defs.PROJ_DIR + datadir
+        test_data = get_data(datadir)['test_set1']
+        target = test_data['target']
+        mse = ((target[:,50:,:] - output[:,50:,:])**2).mean(axis = 1)
+        mse = mse.mean()
+        mses.append(mse)
+    return mses
 
 def graph_sim_position(seed, sim_number, cmap = 'plasma', ax = None):
     outdir = get_outdir(seed, sim_number)
@@ -78,26 +93,8 @@ def get_outdir(seed, sim_number):
     outdir = rnn_defs.PROJ_DIR + rnn_defs.RESULTS_FOLDER + '/' + str(seed) + '/' + str(sim_number) + '/' 
     return outdir
 
-# def subsample_neurons(df, n_sample = None, p = None):
-#     assert sum([arg is not None for arg in [n_sample, p]]) == 1
-#     fields = [col for col in df.columns.values
-#                 if col.endswith("spikes") or col.endswith("rates")]
-#     n_neurons = df[fields[0]].values[0].shape[1]
-
-#     # choose random sample by number of neurons or percentage of population
-#     if n_sample is not None:
-#         idx = np.random.choice(n_neurons, n_sample)
-#     else:
-#         idx = np.random.choice(n_neurons, int(n_neurons*p))
-        
-#     for field in fields:
-#         df[field] = [trial[field][:,idx] for (i, trial) in df.iterrows()]
-    
-#     return df
-
-
 def get_processed_pyaldata(seed, sim_number, epoch_fun = None, calc_kinematics = True, 
-        subtract_mean = True):
+        subtract_mean = False):
     pyal_df = model_to_pyaldata(seed, sim_number, calc_kinematics)
     pyal_df = pyal.add_movement_onset(pyal_df, method = 'threshold', s_thresh = 9)
     pyal_df = pyal.smooth_signals(pyal_df, ["MCx_rates"])
@@ -106,12 +103,9 @@ def get_processed_pyaldata(seed, sim_number, epoch_fun = None, calc_kinematics =
         pyal_df = pyal.restrict_to_interval(pyal_df, epoch_fun = epoch_fun)
 
     if subtract_mean: 
-        pyal_df = pyal.subtract_cross_condition_mean(pyal_df)     
-    return pyal_df
+        pyal_df = pyal.subtract_cross_condition_mean(pyal_df)  
 
-# def get_training_data(outdir):
-#     train_data = np.load(outdir+'training.npy',allow_pickle = True).item()
-#     return train_data
+    return pyal_df
 
 # convert current model results to pyaldata
 def model_to_pyaldata (seed, sim_number, calc_kinematics = True):
@@ -177,112 +171,7 @@ def model_to_pyaldata (seed, sim_number, calc_kinematics = True):
             
         df['vel'] = [vels[i] for i in range(ntrials)]
     return df
-    
-# def get_pyaldata (activity1, test_data, dt):
-#     """
-#     Converts model results to Pyaldata format.
-
-#     Parameters
-#     ----------
-#     outdir: str
-#         where model is saved
-
-#     Returns
-#     -------
-#     df: Pandas dataframe
-#         in pyaldata format
-
-#     """
-#     # columns needed for pyaldata
-#     column_names = ['bin_size', 'idx_target_on', 'idx_go_cue', 'MCx_rates']
-#     df = pd.DataFrame(columns = column_names)
-
-#     #populate columns
-#     df['idx_target_on'] = test_data.data['cue_onset']
-#     df['idx_go_cue'] = test_data.data['go_onset']
-#     df['MCx_rates'] =[activity1[i,:] for i in range(activity1.shape[0])] 
-#     df['bin_size'] = dt
-
-#     return df
-    
-
-# def save_pcas(pcas, sim_number, sample_trials=None):
-#     """
-#     Save pcas as files
-    
-#     Parameters
-#     ----------
-#     pcas: array
-#         m items x n samples x p PCs
-#     """
-#     params = '_'.join(filter(None, [str(sim_number), 
-#                                     str(sample_trials) if sample_trials is not None else None]))
-#     np.save(savdir+'pcas_'+params, pcas)
-
-# def get_pcas_path(sim_number, group, start_point = None, rel_start = 0, rel_end = 0, n_sample = None, p =None, sample_trials=None):
-#     params = '_'.join(filter(None, [group, str(sim_number),  start_point, str(rel_start), str(rel_end),
-#                                     str(n_sample) if n_sample is not None else None, 
-#                                     str(p) if p is not None else None,
-#                                     str(sample_trials) if sample_trials is not None else None]))
-#     return savdir+'pcas_'+params+'.npy'
-
-# def sample_pca(seed, sim_number, n_components, ntrials = 64, epoch_fun = None):
-#     df = get_processed_pyaldata(seed, sim_number, epoch_fun = epoch_fun, subtract_mean=False)
-#     df = pyal.dim_reduce(df, PCA(n_components), 'MCx_rates', 'both_pca')
-#     # df = pyal.subtract_cross_condition_mean(df)
-#     df = df.groupby('target_id').head(ntrials/rnn_defs.n_targets)
-#     pca = np.concatenate(df['both_pca'].values, axis=0)
-#     return pca
-
-# def sample_pcas(seeds, sim_number, group, ntrials = 128, start_point = start_point, rel_start = rel_start, rel_end = rel_end, n_sample =None, p = None):
-#     pcas = []
-#     for seed in seeds: 
-#         pca = sample_pca(seed, sim_number, group, ntrials, start_point, rel_start, rel_end, n_sample, p)
-#         pcas.append(pca)
-#     save_pcas(pcas, sim_number, group, start_point, rel_start, rel_end, n_sample, p, sample_trials = ntrials)
-#     return pcas
-
-
-def get_pca(seed, sim_number, n_components, epoch_fun = None):
-    df = get_processed_pyaldata(seed, sim_number, epoch_fun = epoch_fun)
-    df = pyal.dim_reduce(df, PCA(n_components), 'MCx_rates', 'both_pca')
-    pca = np.concatenate(df['both_pca'].values, axis=0)
-    return pca
-
-def get_pcas(seeds, sim_number, n_components, epoch_fun = None, replace = False):
-    # path = get_pcas_path(sim_number, group, start_point, rel_start, rel_end, n_sample, p)
-    # if os.path.exists(path) and not replace:
-    #     pcas = np.load(path,allow_pickle = True)
-    #     # print(path)
-
-    # else:
-    pcas = []
-    for seed in seeds: 
-        pca = get_pca(seed, sim_number, n_components, epoch_fun = epoch_fun)
-        pcas.append(pca)
-    # save_pcas(pcas, sim_number, group, start_point, rel_start, rel_end, n_sample, p)
-    return pcas
-
-def get_outputs(seeds, sim_number, epoch_fun = None):
-    outputs = []
-    for seed in seeds:
-        df = get_processed_pyaldata(seed, sim_number, epoch_fun = epoch_fun)
-        output = np.concatenate(df['pos'].values, axis = 0)
-        outputs.append(output)
-    return outputs
-
-def get_cc_within_seeds (seeds, sim_number, n_components, epoch_fun = None):
-    pcas = get_pcas(seeds, sim_number, n_components, epoch_fun = epoch_fun)
-
-    ccs = []
-    for i, pca1 in enumerate(pcas):
-        for j, pca2 in enumerate(pcas[i+1:]):
-            n = min(pca1.shape[0],pca2.shape[0])
-            ccs.append(dt.canoncorr(pca1[:n,:],pca2[:n,:]))
-    ccs = np.array(ccs).T
-
-    return ccs
-
+ 
 def get_cc_within(dfs, n_components, epoch_fun = None):
     data = dt.get_data_array(dfs, epoch_fun, area = 'MCx', model = n_components)
 
@@ -303,178 +192,114 @@ def get_cc_within(dfs, n_components, epoch_fun = None):
     ccs = np.array(ccs)
     ccs = np.percentile(ccs, 99, axis=1).T
     return ccs
- 
 
-# def get_success_rate (seeds, sim_number, group):
-#     n_success = 0
-#     for seed in seeds:
-#         outdir = st.get_outdir(seed, sim_number, group)
-#         finished_training = st.get_training_data(outdir)['finished_training']
-#         if finished_training:
-#             n_success +=1
+def get_cc_across(dfs, n_components, epoch_fun = None):
+
+    pairFileList1 = []
+    for I in range(len(dfs)):
+        for J in range(len(dfs)):
+            if J<=I: continue  # to repetitions
+            pairFileList1.append((I,J))
+
+    side1df = [dfs[i] for i,_ in pairFileList1]
+    side2df = [dfs[j] for _,j in pairFileList1]
+    AllData1 = dt.get_data_array(side1df, epoch_fun, area='MCx', model=n_components)
+    AllData2 = dt.get_data_array(side2df, epoch_fun, area='MCx', model=n_components)
     
-#     return (n_success/len(seeds))
-
-
-def get_cc_between_sims (seeds1, seeds2, sim1, sim2, n_components, epoch_fun = None):
-    sim1_pcas = get_pcas(seeds1, sim1, n_components, epoch_fun)
-    sim2_pcas = get_pcas(seeds2, sim2, n_components, epoch_fun)
-
-    ccs = []
-    for pca1 in (sim1_pcas):
-        for pca2 in (sim2_pcas):
-            ccs.append(dt.canoncorr(pca1,pca2))
+    _,_, min_trials, min_time,_ = np.min((AllData1.shape,AllData2.shape),axis=0)
+    ccs=[]
+    for sessionData1,sessionData2 in zip(AllData1,AllData2):
+        data1 = np.reshape(sessionData1[:,:min_trials,:min_time,:], (-1,n_components))
+        data2 = np.reshape(sessionData2[:,:min_trials,:min_time,:], (-1,n_components))
+        ccs.append(dt.canoncorr(data1, data2))
+    
     ccs = np.array(ccs).T
 
     return ccs
 
-# def plot_ccs(ccs, title, ax = None, add_labels = True, color = 'b'):
-#     if ax is None:
-#         _, ax = plt.subplots(dpi=100, figsize = (4,3))
-#     utility.shaded_errorbar(ax, ccs, color=color, marker = 'o')
-#     ax.set_title(title)
-#     if add_labels:
-#         ax.set_xlabel('components')
-#         ax.set_ylabel('canonical correlation')  
+def get_cc_across_sims(dfs1, dfs2, n_components, epoch_fun = None):
 
-# def plot_ccs_upperbounds(across_ccs, within_ccs_1, within_ccs_2, label1, label2, ax = None):
-#     if ax is None:
-#         _,ax = plt.subplots(dpi=100, figsize = (4,3))
-#     utility.shaded_errorbar(ax, across_ccs, color='b', marker = 'o', label = label1 + ' vs ' + label2)
-#     utility.shaded_errorbar(ax, within_ccs_1, color='g', marker = 'o', label = label1)
-#     utility.shaded_errorbar(ax, within_ccs_2, color='r', marker = 'o', label = label2)
-#     ax.set_title(label1 + ' vs ' + label2)
-#     ax.legend()
-#     ax.set_xlabel('components')
-#     ax.set_ylabel('canonical correlation') 
+    pairFileList1 = []
+    for I in range(len(dfs1)):
+        for J in range(len(dfs2)):
+            if J<=I: continue  # to repetitions
+            pairFileList1.append((I,J))
 
-# def successful_sims(sim_numbers, seeds, group):
-#     successful_sims = []
-#     for sim_number in sim_numbers:
-#         try:
-#             success_rate = get_success_rate(seeds, sim_number, group)
-#             if success_rate > 0.5:
-#                 successful_sims.append(sim_number)
-#             else:
-#                 title = sim_label[sim_number]
-#                 print(sim_number, title, 'failed:', success_rate)
-#         except:
-#             title = sim_label[sim_number]
-#             print(group, 'failed to get', sim_number, title)
-
-#     return successful_sims
-
-# def graph_cc_comparison(seeds1, seeds2, sim1, sim2, group1, group2, pca_dims, start_point, rel_start, rel_end, n_sample = None, p = None):
-#     ccs_1 = get_cc_within_seeds(seeds1, sim1, group1, pca_dims, start_point, rel_start, rel_end, n_sample, p)
-#     ccs_2 = get_cc_within_seeds(seeds2, sim2, group2, pca_dims, start_point, rel_start, rel_end, n_sample, p)
-#     ccs = get_cc_between_sims(seeds1, seeds2, sim1, sim2, pca_dims, group1, group2, start_point, rel_start, rel_end, n_sample,p)
-
-#     fig,ax = plt.subplots(ncols=1, figsize=(3,2))
-#     utility.shaded_errorbar(ax, np.arange(1,pca_dims+1), ccs, color='indigo', marker = 'o', label=f'Across')
-#     utility.shaded_errorbar(ax, np.arange(1,pca_dims+1), ccs_1, color='cornflowerblue', marker = '<', ls='--', label=f'Within networks 1')
-#     utility.shaded_errorbar(ax, np.arange(1,pca_dims+1), ccs_2, color='palevioletred', marker = '>', ls=':', label=f'Within networks 2')
-
-#     ax.set_ylim([0,1.05])
-#     ax.set_xlim([.5,pca_dims+.5])
-#     ax.set_xlabel('Neural mode')
-#     # ax.set_title(f'{defs.areas[2]} Alignment')
-#     ax.legend(loc=(0.01,0.05))
-#     ax.set_ylabel('Canonical correlation')
-#     fig.tight_layout()
-
-#     params = '_'.join(filter(None, [group1, sim_label[sim1], group2, sim_label[sim2], 
-#                                         start_point, str(rel_start), str(rel_end),
-#                                         str(n_sample) if n_sample is not None else None, 
-#                                         str(p) if p is not None else None]))
-#     fig.savefig(figdir + 'compare_' + params + '.pdf', format='pdf', bbox_inches='tight')
-
-def get_cc_behav_corr_between_seeds(seeds, sim_number, n_components, epoch_fun, redo=False):
-    path = rnn_defs.PROJ_DIR + rnn_defs.RESULTS_FOLDER + "corr_within_"+ str(sim_number)+'.npy'
-    if os.path.exists(path) and not redo:
-        corr_within = np.load(path,allow_pickle = True)
-    else:
-        corr_within =[]
-
-        dfs = []
-        for seed in seeds:
-            df = get_processed_pyaldata(seed,sim_number, epoch_fun, calc_kinematics=True)
-            df = pyal.dim_reduce(df, PCA(n_components), 'MCx_rates', 'both_pca')
-            dfs.append(df)
-
-        for i,seed1 in enumerate(seeds):
-            #info from first network
-            df1 = dfs[i]
-            pca1 = np.concatenate(df1['both_pca'].values, axis = 0)
-            targets = np.unique(df1.target_id)
-
-            for j,seed2 in enumerate(seeds):
-                if i <=j: continue
-                #info from second network
-                df2 = dfs[j]
-                pca2 = np.concatenate(df2['both_pca'].values, axis = 0)
-
-                #look at behavioral correlation for matched targets
-                behav_corr = []
-                for target in targets:
-                    df1_ = pyal.select_trials(df1, df1.target_id == target)
-                    df2_ = pyal.select_trials(df2, df2.target_id == target)
-
-                    #for each trial
-                    for i, pos1 in enumerate(df1_.pos):
-                        for j, pos2 in enumerate(df2_.pos):
-                            r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
-                            behav_corr.append(np.mean(np.abs(r)))
-                
-                #get CCA            
-                corr_within.append((dt.canoncorr(pca1, pca2)[:4].mean() , np.mean(behav_corr)))
-        np.save(path, corr_within)
-    return corr_within
-
-def get_cc_behav_corr_across_sims(seeds1, seeds2, sim_number1, sim_number2, n_components, epoch_fun, redo = False):
-    path = rnn_defs.PROJ_DIR + rnn_defs.RESULTS_FOLDER + "corr_across_"+ str(sim_number1)+ '_' + str(sim_number2)+'.npy'
-    if os.path.exists(path) and not redo:
-        corr_across = np.load(path,allow_pickle = True)
+    side1df = [dfs1[i] for i,_ in pairFileList1]
+    side2df = [dfs2[j] for _,j in pairFileList1]
+    AllData1 = dt.get_data_array(side1df, epoch_fun, area='MCx', model=n_components)
+    AllData2 = dt.get_data_array(side2df, epoch_fun, area='MCx', model=n_components)
     
-    else:
-        corr_across =[]
+    _,_, min_trials, min_time,_ = np.min((AllData1.shape,AllData2.shape),axis=0)
+    ccs=[]
+    for sessionData1,sessionData2 in zip(AllData1,AllData2):
+        data1 = np.reshape(sessionData1[:,:min_trials,:min_time,:], (-1,n_components))
+        data2 = np.reshape(sessionData2[:,:min_trials,:min_time,:], (-1,n_components))
+        ccs.append(dt.canoncorr(data1, data2))
+    
+    ccs = np.array(ccs).T
 
-        #get data
-        dfs1 = []
-        for seed in seeds1:
-            df = get_processed_pyaldata(seed,sim_number1, epoch_fun, calc_kinematics=True)
-            df = pyal.dim_reduce(df, PCA(n_components), 'MCx_rates', 'both_pca')
-            dfs1.append(df)
-        
-        dfs2 = []
-        for seed in seeds2:
-            df = get_processed_pyaldata(seed,sim_number2, epoch_fun, calc_kinematics=True)
-            df = pyal.dim_reduce(df, PCA(n_components), 'MCx_rates', 'both_pca')
-            dfs2.append(df)
+    return ccs
 
-        #calculate correlations and CCs
-        for i,df1 in enumerate(dfs1):
-            #info from network in first sim
-            pca1 = np.concatenate(df1['both_pca'].values, axis = 0)
-            targets = np.unique(df1.target_id)
+def trim_across_rnn_corr(allDF1:list[pd.DataFrame],allDF2:list[pd.DataFrame]):
+    across_corrs = {}
+    for dfi, df1__ in enumerate(allDF1):
+        df1 = pyal.restrict_to_interval(df1__, epoch_fun=rnn_defs.exec_epoch)
+        targets = np.unique(df1.target_id)
+        across_corrs[df1.seed[0]]={}
+        for dfj, df2__ in enumerate(allDF2):
+            df2 = pyal.restrict_to_interval(df2__, epoch_fun=rnn_defs.exec_epoch)
+            across_corrs[df2.seed[0]] = {} if df2.seed[0] not in across_corrs.keys() else across_corrs[df2.seed[0]]
+            across_corrs[df1.seed[0]][df2.seed[0]]=[]
+            for target in targets:
+                df1_ = pyal.select_trials(df1, df1.target_id == target)
+                df2_ = pyal.select_trials(df2, df2.target_id == target)
+                for i, pos1 in enumerate(df1_.pos):
+                    for j, pos2 in enumerate(df2_.pos):
+                        r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
+                        across_corrs[df1_.seed[0]][df2_.seed[0]].append(np.mean(np.abs(r)))
 
-            for j,df2 in enumerate(dfs2):
-                #info from network in second sim
-                pca2 = np.concatenate(df2['both_pca'].values, axis = 0)
+        # make the across correlations symmetrical!
+        for  df2_session, val in across_corrs[df1__.seed[0]].items():
+            across_corrs[df2_session][df1__.seed[0]] = val
 
-                #look at behavioral correlation for matched targets
-                behav_corr = []
-                for target in targets:
-                    df1_ = pyal.select_trials(df1, df1.target_id == target)
-                    df2_ = pyal.select_trials(df2, df2.target_id == target)
+    return across_corrs
 
-                    #for each trial
-                    for m, pos1 in enumerate(df1_.pos):
-                        for n, pos2 in enumerate(df2_.pos):
-                            r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
-                            behav_corr.append(np.mean(np.abs(r)))
+def trim_across_seeds_rnn_corr(allDF1:list[pd.DataFrame]):
+    across_corrs = {}
+    for dfi, df1__ in enumerate(allDF1):
+        df1 = pyal.restrict_to_interval(df1__, epoch_fun=rnn_defs.exec_epoch)
+        targets = np.unique(df1.target_id)
+        across_corrs[df1.seed[0]]={}
+        for dfj, df2__ in enumerate(allDF1):
+            df2 = pyal.restrict_to_interval(df2__, epoch_fun=rnn_defs.exec_epoch)
+            across_corrs[df2.seed[0]] = {} if df2.seed[0] not in across_corrs.keys() else across_corrs[df2.seed[0]]
+            if dfj <= dfi: continue
+            across_corrs[df1.seed[0]][df2.seed[0]]=[]
+            for target in targets:
+                df1_ = pyal.select_trials(df1, df1.target_id == target)
+                df2_ = pyal.select_trials(df2, df2.target_id == target)
+                for i, pos1 in enumerate(df1_.pos):
+                    for j, pos2 in enumerate(df2_.pos):
+                        r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
+                        across_corrs[df1_.seed[0]][df2_.seed[0]].append(np.mean(np.abs(r)))
+    return across_corrs
 
-                #get CCA            
-                corr_across.append((dt.canoncorr(pca1, pca2)[:4].mean() , np.mean(behav_corr)))
-        np.save(path, corr_across)
 
-    return corr_across
+def trim_within_rnn_corr(allDF1:list[pd.DataFrame]):
+    within_corrs = {}
+    for dfi, df1__ in enumerate(allDF1):
+        df1 = pyal.restrict_to_interval(df1__, epoch_fun=rnn_defs.exec_epoch)
+        targets = np.unique(df1.target_id)
+        within_corrs[df1.seed[0]]=[]
+        for target in targets:
+            df1_ = pyal.select_trials(df1, df1.target_id == target)
+            for n in range(10):
+                shuffled = df1_.sample(frac=1)
+                result = np.array_split(shuffled, 2) 
+                for i, pos1 in enumerate(result[0].pos):
+                    for j, pos2 in enumerate(result[1].pos):
+                        r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
+                        within_corrs[df1_.seed[0]].append(np.mean(np.abs(r)))
+
+    return within_corrs

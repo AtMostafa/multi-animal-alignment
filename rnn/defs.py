@@ -34,7 +34,7 @@ pca_dims = 10
 BIN_SIZE = .01  # sec
 n_components = 10 
 n_targets = 8
-seed_idx_ex = 8
+seed_idx_ex = 5
 trial_ex = 15
 
 WINDOW_prep = (-.40, .05)  # sec

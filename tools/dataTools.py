@@ -11,6 +11,7 @@ from typing import Callable
 
 import logging
 
+import torch
 
 def summary(df):
     "prints a summary of monkey task datasets"
@@ -206,7 +207,6 @@ def VAF_pyal(df1:pd.DataFrame, field1: str, epoch1,
  
     df1 = pyal.restrict_to_interval(df1,epoch_fun=epoch1)
     rates_1 = np.concatenate(df1[field1].values, axis=0)
-    rates_1 -= np.mean(rates_1,axis=0)
     rates_1_model = PCA(n_components=n_components, svd_solver='full').fit(rates_1)
     rates_1_C = rates_1_model.components_
     df1 = pyal.apply_dim_reduce_model(df1, rates_1_model, field1, '_pca');
@@ -215,7 +215,6 @@ def VAF_pyal(df1:pd.DataFrame, field1: str, epoch1,
     
     df2 = pyal.restrict_to_interval(df2, epoch_fun=epoch2)
     rates_2 = np.concatenate(df2[field2].values, axis=0)
-    rates_2 -= np.mean(rates_2,axis=0)
     rates_2_model = PCA(n_components=n_components, svd_solver='full').fit(rates_2)
     rates_2_C = rates_2_model.components_
     df2 = pyal.apply_dim_reduce_model(df2, rates_2_model, field2, '_pca');
@@ -247,7 +246,6 @@ def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1, target1: int,
  
     df1 = pyal.restrict_to_interval(df1,epoch_fun=epoch1)
     rates_1 = np.concatenate(df1[field1].values, axis=0)
-    rates_1 -= np.mean(rates_1,axis=0)
     rates_1_model = PCA(n_components=n_components, svd_solver='full').fit(rates_1)
     rates_1_C = rates_1_model.components_
     df1 = pyal.apply_dim_reduce_model(df1, rates_1_model, field1, '_pca');
@@ -259,7 +257,6 @@ def VAF_pc_cc_pyal(df1:pd.DataFrame, field1: str, epoch1, target1: int,
     
     df2 = pyal.restrict_to_interval(df2, epoch_fun=epoch2)
     rates_2 = np.concatenate(df2[field2].values, axis=0)
-    rates_2 -= np.mean(rates_2,axis=0)
     rates_2_model = PCA(n_components=n_components, svd_solver='full').fit(rates_2)
     rates_2_C = rates_2_model.components_
     df2 = pyal.apply_dim_reduce_model(df2, rates_2_model, field2, '_pca');
@@ -294,11 +291,9 @@ def VAF_pc_cc_pyal2(df1:pd.DataFrame, field1: str, epoch1, target1: int,
  
     df1_ = pyal.restrict_to_interval(df1,epoch_fun=epoch1)
     rates_1 = np.concatenate(df1_[field1].values, axis=0)
-    rates_1 -= np.mean(rates_1,axis=0)
 
     df2_ = pyal.restrict_to_interval(df2, epoch_fun=epoch2)
     rates_2 = np.concatenate(df2_[field2].values, axis=0)
-    rates_2 -= np.mean(rates_2,axis=0)
     
     # PCA
     ## check for `n`
@@ -465,7 +460,6 @@ def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: 
     for session, df in enumerate(data_list):
         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch) if epoch is not None else df
         rates = np.concatenate(df_[field].values, axis=0)
-        rates -= np.mean(rates, axis=0)
         rates_model = model.fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
 
@@ -556,3 +550,39 @@ def warp_time (a:np.ndarray, b:np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     out_sh = func(x_long)
 
     return (out_sh,long) if a_is_shorter else (long,out_sh)
+
+def canoncorr_torch(X:torch.Tensor, Y: torch.Tensor) -> torch.Tensor:
+    """
+    Canonical Correlation Analysis (CCA)
+    line-by-line port from Matlab implementation of `canoncorr`
+    X,Y: (samples/observations) x (features) matrix, for both: X.shape[0] >> X.shape[1]
+    fullReturn: whether all outputs should be returned or just `r` be returned (not in Matlab)
+    
+    r:   Canonical correlations
+    
+    Signature:
+    r = canoncorr(X, Y)
+    """
+    n, p1 = X.shape
+    p2 = Y.shape[1]
+    if p1 >= n or p2 >= n:
+        logging.warning('Not enough samples, might cause problems')
+
+    # Center the variables #why does this matter
+    # X = X - torch.mean(X,0);
+    # Y = Y - torch.mean(Y,0);
+    # print(torch.mean(X,0))
+    # print(torch.mean(Y,0))
+
+    # Factor the inputs, and find a full rank set of columns if necessary
+    Q1,T11 = torch.linalg.qr(X, mode='reduced')
+    Q2,T22 = torch.linalg.qr(Y, mode='reduced')
+    rankX = torch.sum(torch.abs(torch.diagonal(T11)) > torch.finfo(torch.abs(T11[0,0]).dtype).eps*max([n,p1]));
+    rankY = torch.sum(torch.abs(torch.diagonal(T22)) > torch.finfo(torch.abs(T22[0,0]).dtype).eps*max([n,p1]));
+    
+    Q1 = Q1[:,:rankX];
+    Q2 = Q2[:,:rankY];
+
+    r = torch.linalg.svdvals(Q1.T @ Q2) 
+
+    return r

@@ -13,13 +13,15 @@ do
     'seeds=($seed_str)
     for seed in ${seeds[@]:$((i*incr)):$(((i+1)*incr))}
     do
-        for sim_number in 31 20 24
-        do
-            # python3 simulation/run_pipeline.py 100001$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0pos
-            python3 simulation/run_pipeline.py 100002$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0pos
-            python3 save_pca.py $sim_number
-            # python3 simulation/run_pipeline.py 100003$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0pos -cca pca_movement_on_1000010_$sim_number
-            python3 simulation/run_pipeline.py 100005$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0pos -cca pca_movement_on_1000010_$sim_number
-        done
+        # python3 simulation/run_pipeline.py 100003$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0pos
+        # python3 simulation/run_pipeline.py 100002$seed $sim_number -c config_$sim_number.yaml -file dataset_chewie_bl0pos
+        python3 simulation/run_pipeline.py 100002$seed 1 -c config_1.yaml -file dataset_chewie_bl0pos
+        python3 save_pca.py 1
+        python3 simulation/run_pipeline.py 100003$seed 1 -c config_1.yaml -file dataset_chewie_bl0pos -cca pca_1000020_1
+        # python3 save_pca.py 20
+        # python3 save_pca.py 24
+        # #without centering in canoncorr_torch
+        # python3 simulation/run_pipeline.py 100005$seed 1 -c config_20.yaml -file dataset_chewie_bl0pos -cca pca_1000020_20
+        # python3 simulation/run_pipeline.py 100005$seed 2 -c config_24.yaml -file dataset_chewie_bl0pos -cca pca_1000020_24
     done'
 done
