@@ -35,7 +35,7 @@ BIN_SIZE = .01  # sec
 n_components = 10 
 n_targets = 8
 seed_idx_ex = 5
-trial_ex = 15
+trial_ex = 1
 
 WINDOW_prep = (-.40, .05)  # sec
 WINDOW_exec = (-.05, .40)  # sec
