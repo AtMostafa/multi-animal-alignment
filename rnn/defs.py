@@ -26,9 +26,6 @@ SEEDS2 = range(1000050,1000060)
 BATCH_SIZE = 64
 
 #DATA PROCESSING
-START_POINT = 'idx_movement_on'
-REL_START = -45
-REL_END = 45
 pca_dims = 10
 
 BIN_SIZE = .01  # sec
