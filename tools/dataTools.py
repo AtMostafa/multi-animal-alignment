@@ -11,6 +11,7 @@ from typing import Callable
 
 import logging
 
+import torch
 
 def summary(df):
     "prints a summary of monkey task datasets"
@@ -549,3 +550,35 @@ def warp_time (a:np.ndarray, b:np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     out_sh = func(x_long)
 
     return (out_sh,long) if a_is_shorter else (long,out_sh)
+
+def canoncorr_torch(X:torch.Tensor, Y: torch.Tensor) -> torch.Tensor:
+    """
+    Canonical Correlation Analysis (CCA) using torch
+    adapted from `canoncorr`, does not do fullReturn
+    X,Y: (samples/observations) x (features) matrix, for both: X.shape[0] >> X.shape[1]
+    
+    r:   Canonical correlations
+    
+    Signature:
+    r = canoncorr(X, Y)
+    """
+    n, p1 = X.shape
+    p2 = Y.shape[1]
+    if p1 >= n or p2 >= n:
+        logging.warning('Not enough samples, might cause problems')
+
+    #NOTE: removed centering since it did not work with backprop
+
+    # Factor the inputs, and find a full rank set of columns if necessary
+    Q1,T11 = torch.linalg.qr(X, mode='reduced')
+    Q2,T22 = torch.linalg.qr(Y, mode='reduced')
+    rankX = torch.sum(torch.abs(torch.diagonal(T11)) > torch.finfo(torch.abs(T11[0,0]).dtype).eps*max([n,p1]));
+    rankY = torch.sum(torch.abs(torch.diagonal(T22)) > torch.finfo(torch.abs(T22[0,0]).dtype).eps*max([n,p1]));
+    
+    Q1 = Q1[:,:rankX];
+    Q2 = Q2[:,:rankY];
+
+    # Canonical correlations
+    r = torch.linalg.svdvals(Q1.T @ Q2) 
+
+    return r
