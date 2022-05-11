@@ -108,10 +108,7 @@ def get_config(args):
     
     configuration.amend_property(property_name="seed", new_property_value=args.seed)
     configuration.amend_property(property_name="sim_number", new_property_value=args.sim_number)
-    if args.log_epochs:
-        configuration.amend_property(property_name="log_epochs", new_property_value=args.log_epochs)
-    if args.log_interval:
-        configuration.amend_property(property_name="log_interval", new_property_value=args.log_interval)
+    
     if args.ccareg:
         configuration.amend_property(property_name="ccareg", new_property_value=True)
         configuration.amend_property(property_name="pcas_file", new_property_value=args.ccareg)
