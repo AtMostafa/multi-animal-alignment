@@ -35,7 +35,6 @@ class ConfigTemplate:
                 requirements=[
                     lambda x: x > 0
                 ],
-                default = 1.0,
             ),
             config_field.Field(
                 name='n1',
@@ -116,17 +115,14 @@ class ConfigTemplate:
             config_field.Field(
                 name='ccareg',
                 types=[bool, type(None)],
-                default = False
             ),
             config_field.Field(
                 name='pcas_file',
                 types=[str, type(None)],
-                default = ''
             ),
             config_field.Field(
                 name='delta',
                 types=[float],
-                default= 1.0,
                 requirements=[
                     lambda x: x >= 0
                 ],
@@ -134,7 +130,6 @@ class ConfigTemplate:
             config_field.Field(
                 name='ccareg_type',
                 types=[str, type(None)],
-                default = 'sum_squared',
                 requirements=[
                     lambda x: x in [None, 'norm', 'sum_squared', 'sum']
                 ],
@@ -142,27 +137,22 @@ class ConfigTemplate:
             config_field.Field(
                 name='ccareg_components_start',
                 types=[int, type(None)],
-                default = 1,
             ),
             config_field.Field(
                 name='ccareg_components_end',
                 types=[int, type(None)],
-                default = 4,
             ),
             config_field.Field(
                 name='ccareg_start_trial',
                 types=[int, type(None)],
-                default = 0,
             ),
             config_field.Field(
                 name='rel_start',
                 types=[int, type(None)],
-                default = -5,
             ),
             config_field.Field(
                 name='rel_end',
                 types=[int, type(None)],
-                default = 40,
             ),
         ],
         level=['regularization'],
