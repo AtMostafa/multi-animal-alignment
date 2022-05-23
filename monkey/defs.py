@@ -24,14 +24,18 @@ prep_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_prep[0]/BIN_SIZE),
                                      rel_end=int(WINDOW_prep[1]/BIN_SIZE)
                                     )
-exec_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on', 
+exec_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_exec[0]/BIN_SIZE),
                                      rel_end=int(WINDOW_exec[1]/BIN_SIZE)
                                     )
-fixation_epoch = pyal.generate_epoch_fun(start_point_name='idx_target_on', 
+fixation_epoch = pyal.generate_epoch_fun(start_point_name='idx_target_on',
                                          rel_start=int(WINDOW_prep[0]/BIN_SIZE),
                                          rel_end=int(WINDOW_prep[1]/BIN_SIZE)
                                         )
+exec_epoch_decode = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
+                                     rel_start=int(WINDOW_exec[0]/BIN_SIZE) - MAX_HISTORY,
+                                     rel_end=int(WINDOW_exec[1]/BIN_SIZE)
+                                    )
 
 def get_target_id(trial):
     return int(np.round((trial.target_direction + np.pi) / (0.25*np.pi))) - 1
