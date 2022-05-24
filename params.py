@@ -95,9 +95,11 @@ class panels:
     cca_hist = (2,SmallH)
     decoding_hist = (2,SmallH)
     neuro_behav_corr = (2.1, SmallH)
-    
+
 class colors:
     "colors for different data types in the paper"
+    MouseM1 = 'tab:blue'
+    MouseStr = 'tab:orange'
     MainCC = 'k'
     LowerCC = 'gray'
     UpperCC = 'cornflowerblue'
