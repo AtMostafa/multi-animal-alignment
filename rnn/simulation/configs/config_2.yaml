@@ -11,7 +11,7 @@ neurons:
   gin: 0.1
   gout: 0.1
   n1: 300
-  noise: 0.1
+  noise: 0.2
   p_recurrent: 1.0
   tau: 0.05
 outdir: null
@@ -34,7 +34,6 @@ simulation:
   sim_number: null
 timestamp: null
 training:
-  optimizer: Adam
   batch_size: 64
   lr: 0.0005
   training_trials: 300
