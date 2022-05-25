@@ -10,6 +10,14 @@ class ConfigTemplate:
                 name='sim_number',
                 types=[type(None), int],
             ),
+            config_field.Field(
+                name='network',
+                types=[str],
+                requirements=[
+                    lambda x: x in ['RNN', 'RNN_muscle']
+                ],
+                default = 'RNN'
+            ),
         ],
         level=['simulation'],
     )
@@ -161,6 +169,14 @@ class ConfigTemplate:
     _training_template = config_template.Template(
         fields=[
             config_field.Field(
+                name='optimizer',
+                types=[str],
+                requirements=[
+                    lambda x: x in ['Adam', 'FORCE']
+                ],
+                default = 'Adam'
+            ),
+            config_field.Field(
                 name='batch_size',
                 types=[int],
                 requirements=[
@@ -177,9 +193,6 @@ class ConfigTemplate:
             config_field.Field(
                 name='lr',
                 types=[float],
-                requirements=[
-                    lambda x: x > 0 
-                ],
             ),
         ],
         level=['training'],
