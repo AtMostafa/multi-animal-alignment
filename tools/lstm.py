@@ -2,8 +2,6 @@
 from: https://github.com/KordingLab/Neural_Decoding/blob/master/Neural_Decoding/decoders.py
 """
 
-import numpy as np
-#Import functions for Keras if Keras is installed
 from tensorflow import keras
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
