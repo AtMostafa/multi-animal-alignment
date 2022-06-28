@@ -1,14 +1,14 @@
 """
 from: https://github.com/KordingLab/Neural_Decoding/blob/master/Neural_Decoding/decoders.py
 """
-
+import sklearn
 from tensorflow import keras
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout
 keras_v1=int(keras.__version__[0])<=1
 #################### LONG SHORT TERM MEMORY (LSTM) DECODER ##########################
 
-class LSTMRegression(object):
+class LSTMRegression:
 
     """
     Class for the gated recurrent unit (GRU) decoder
