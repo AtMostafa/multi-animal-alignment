@@ -40,7 +40,8 @@ exec_epoch_decode = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
 
 def custom_r2_func(y_true, y_pred):
     "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
-    return stats.pearsonr(y_true, y_pred)[0] ** 2
+    c = np.corrcoef(y_true, y_pred) ** 2
+    return np.diag(c[-int(c.shape[0]/2):,:int(c.shape[1]/2)])
 
 custom_r2_scorer = make_scorer(custom_r2_func)
 
