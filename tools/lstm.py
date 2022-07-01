@@ -30,7 +30,7 @@ class LstmDecoder(nn.Module):
     def forward(self, signal):
         """
         The `forward` method
-        `signal`: of size time x trial x features
+        `signal`: of size: time x trial x features
         """
         outputs, n_samples = [], signal.size(1)
         h_t = torch.zeros(n_samples, self.hidden_layers, dtype=torch.float32)
