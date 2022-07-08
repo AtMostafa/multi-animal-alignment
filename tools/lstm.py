@@ -50,7 +50,7 @@ class LstmDecoder(nn.Module):
         return outputs
 
 def training_loop(n_epochs, model, optimiser, loss_fn,
-                  train_input, train_target, test_input, test_target):
+                  train_input, train_target):
     "training"
     def closure():
         "Helper function"
