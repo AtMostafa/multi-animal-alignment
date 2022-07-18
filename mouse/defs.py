@@ -11,7 +11,7 @@ import pyaldata as pyal
 
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 
-_example = ('js2p0_tbytSpkHandJsTrj10msBin_WR44_031020_ss.p', 'js2p0_tbytSpkHandJsTrj10msBin_WR39_100219_ss.p')
+_example = ('js2p0_tbytSpkHandJsTrj10msBin_WR38_052219_ss.p', 'js2p0_tbytSpkHandJsTrj10msBin_WR40_081919_ss.p')
 MAX_HISTORY = 3  #int: no of bins to be added as history
 BIN_SIZE = .03  # sec
 WINDOW_ctrl = (-.95, -.5)
@@ -29,10 +29,14 @@ exec_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_exec[0]/BIN_SIZE),
                                      rel_end=int(WINDOW_exec[1]/BIN_SIZE)
                                     )
-fixation_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on', 
+fixation_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                          rel_start=int(WINDOW_ctrl[0]/BIN_SIZE),
                                          rel_end=int(WINDOW_ctrl[1]/BIN_SIZE)
                                         )
+exec_epoch_decode = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
+                                     rel_start=int(WINDOW_exec[0]/BIN_SIZE) - MAX_HISTORY,
+                                     rel_end=int(WINDOW_exec[1]/BIN_SIZE)
+                                    )
 
 def custom_r2_func(y_true, y_pred):
     "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
