@@ -8,7 +8,7 @@ logging:
   log_model: false
 neurons:
   g1: 1.2
-  gin: 0.1
+  gin: 1.0
   gout: 0.1
   n1: 300
   noise: 0.1
@@ -32,9 +32,10 @@ regularization:
 seed: 20
 simulation:
   sim_number: null
+  network: RNN
 timestamp: null
 training:
-  optimizer: Adam
+  optimizer: SGD
   batch_size: 64
-  lr: 0.0005
+  lr: 100.0
   training_trials: 300

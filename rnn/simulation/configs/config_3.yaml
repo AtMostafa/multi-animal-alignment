@@ -34,7 +34,7 @@ simulation:
   sim_number: null
 timestamp: null
 training:
-  optimizer: Adam
+  optimizer: FORCE
   batch_size: 64
-  lr: 0.0005
+  lr: 100.0
   training_trials: 300

@@ -48,12 +48,14 @@ class RNN(nn.Module):
                 }
         return dic
     
-    def init_hidden(self):
+    def init_hidden(self, batch_size = None):
         '''
         Initialize hidden activity state
         '''
+        if batch_size is None:
+            batch_size = self.batch_size
         # needs to be small !! as rates are regularized during training -> so going small
-        return ((torch.rand(1,self.batch_size, self.n_neurons)-0.5)*0.2).type(self.dtype)
+        return ((torch.rand(1,batch_size, self.n_neurons)-0.5)*0.2).type(self.dtype)
 
     def forward(self, X):
         '''
@@ -82,8 +84,8 @@ class RNN(nn.Module):
             hiddenl1[j] = r1
             out[j] = self.output(r1)
         return out, hiddenl1
-    
-    def f_step(self,xin,x1,r1):
+
+    def f_step(self,xin,x1,r1, batch_size = None):
         '''
         Single forward step in time
 
@@ -96,10 +98,12 @@ class RNN(nn.Module):
         r1: torch tensor
             activated hidden state (rates)
         '''
+        if batch_size is None:
+            batch_size = self.batch_size
 
         #add noise if noisy
         if self.noisy:
-            nx1 = self.noise_amp*torch.randn(1,self.batch_size, self.n_neurons).type(self.dtype)
+            nx1 = self.noise_amp*torch.randn(1,batch_size, self.n_neurons).type(self.dtype)
             x1 = x1 + self.alpha*(-x1 + r1 @ (self.rnn_l1_hh_mask * self.rnn_l1.weight_hh_l0.T) 
                                       + xin @ self.rnn_l1.weight_ih_l0.T
                                       + nx1
@@ -112,4 +116,3 @@ class RNN(nn.Module):
         r1 = x1.tanh() #tanh activation
 
         return x1,r1
-

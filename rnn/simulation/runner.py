@@ -84,8 +84,13 @@ class Runner:
         criterion = nn.MSELoss(reduction='none')
 
         # create optimizer
-        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
-                lr=self._config.lr)
+        if self._config.optimizer == 'Adam':
+            optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()),
+                    lr=self._config.lr)
+        elif self._config.optimizer == 'FORCE':
+            optimizer = None
+        else:
+            raise Exception('unknown optimizer')
 
         return model, criterion, optimizer
 
@@ -117,8 +122,9 @@ class Runner:
         import matplotlib.pyplot as plt
         plt.figure()
         print('lc shape', np.array(lc).shape)
-        plt.plot(np.array(lc)[:,0,0], label = 'loss', color = 'b')
-        plt.plot(np.array(lc)[:,0,1], label = 'ccareg', color = 'g')
+        plt.plot(np.array(lc)[:,0,0], label = 'loss', color = 'k')
+        plt.plot(np.array(lc)[:,0,1], label = 'output loss', color = 'b')
+        plt.plot(np.array(lc)[:,0,2], label = 'ccareg', color = 'g')
         plt.xlabel("Epoch")
         plt.ylabel("Loss")
         plt.title('Training trials: ' + str(training_trial))
@@ -151,11 +157,11 @@ class Runner:
         ## recurrent weights
         state_dict['rnn_l1.weight_hh_l0'] = torch.FloatTensor(self._config.g1 / np.sqrt(n1) * np.random.randn(n1,n1)) 
         state_dict['rnn_l1.bias_hh_l0'] = torch.FloatTensor(np.zeros(n1)) 
-
-        ## output weights
+            
+        ## output/muscle weights
         state_dict['output.weight'] = torch.FloatTensor((np.random.rand(self.task_params.output_dim, n1)-0.5)*2.*self._config.gout) 
         state_dict['output.bias'] = torch.FloatTensor(np.zeros(self.task_params.output_dim))
-
+    
         model.load_state_dict(state_dict, strict=True)
         return model
 
@@ -417,9 +423,9 @@ class Runner:
                 self.optimizer.step()
 
                 if regcca != 0:
-                    train_running_loss = [loss_train.detach().item(), regcca.detach().item()]
+                    train_running_loss = [loss.detach().item(), loss_train.detach().item(), regcca.detach().item()]
                 else:
-                    train_running_loss = [loss_train.detach().item(), regcca]
+                    train_running_loss = [loss.detach().item(), loss_train.detach().item(), regcca]
 
                 # values to print
                 toprint = OrderedDict()
@@ -431,10 +437,10 @@ class Runner:
                 toprint['R_cca'] = regcca
                 self._log(training_trial, toprint)          
                 lc.append([train_running_loss])
-
+                
                 training_trial += 1 
                 if training_trial >= rnn_defs.MIN_TRAINING_TRIALS: #train for at least n trials...
-                    if (np.mean(np.array(lc)[-10:,0]) <= rnn_defs.LOSS_THRESHOLD) or \
+                    if (np.mean(np.array(lc)[-10:,0,0]) <= rnn_defs.LOSS_THRESHOLD) or \
                      (training_trial >= rnn_defs.MAX_TRAINING_TRIALS): #...and up to m trials
                         finished_training = True
                         break

@@ -32,6 +32,7 @@ regularization:
 seed: 20
 simulation:
   sim_number: null
+  network: 'RNN_muscle'
 timestamp: null
 training:
   optimizer: Adam

@@ -16,7 +16,6 @@ do
         #simulate standard networks
         python3 simulation/run_pipeline.py 100002$seed 1 -c config_1.yaml -file dataset_chewie_bl0pos
         python3 save_pca.py 1
-
         #simulate penalised networks
         python3 simulation/run_pipeline.py 100005$seed 1 -c config_1.yaml -file dataset_chewie_bl0pos -cca pca_1000020_1
     done'

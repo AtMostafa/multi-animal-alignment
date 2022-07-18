@@ -6,9 +6,10 @@ import numpy as np
 # Global params
 from monkey import defs as monkey_defs
 from mouse import defs as mouse_defs
+from rnn import defs as rnn_defs
 
-root = pathlib.Path("/data")
 repoPath = pathlib.Path.cwd()
+root = pathlib.Path(repoPath / "data")
 figPath = repoPath / 'figures'
 LargeFig = (7,8)
 MedFig = (4.3,4.3)
@@ -96,6 +97,15 @@ class panels:
     decoding_hist = (2,SmallH)
     neuro_behav_corr = (2.1, SmallH)
 
+    rnn_schematic = (2.0,SmallH)
+    rnn_output = (1.6, SmallH)
+    rnn_mse = (1, SmallH-0.3)
+    rnn_corr = (1.4, SmallH-0.3)
+    rnn_raster = (2,SmallH)
+    rnn_velocity = (2, TinyH)
+    rnn_cca = (1.5 , MedH -0.2)
+    rnn_cca_hist = (2 ,MedH-0.2)
+
 class colors:
     "colors for different data types in the paper"
     MouseM1 = 'tab:blue'
@@ -103,8 +113,13 @@ class colors:
     MainCC = 'k'
     LowerCC = 'gray'
     UpperCC = 'cornflowerblue'
+    Sim1CC ='cornflowerblue'
+    Sim2CC = 'palevioletred'
+    SimAcrossCC = 'indigo'
     MonkeyPts = 'xkcd:brown'
     MousePts = 'xkcd:violet'
+    WithinRNNPts = 'cornflowerblue'
+    AcrossRNNPts = 'indigo'
     UniversalDecoder = 'goldenrod'
     LeftTrial = (0,1,0,1)
     RightTrial = (1,0,0,1)

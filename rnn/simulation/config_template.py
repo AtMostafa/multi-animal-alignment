@@ -161,6 +161,14 @@ class ConfigTemplate:
     _training_template = config_template.Template(
         fields=[
             config_field.Field(
+                name='optimizer',
+                types=[str],
+                requirements=[
+                    lambda x: x in ['Adam', 'FORCE']
+                ],
+                default = 'Adam'
+            ),
+            config_field.Field(
                 name='batch_size',
                 types=[int],
                 requirements=[
@@ -177,9 +185,6 @@ class ConfigTemplate:
             config_field.Field(
                 name='lr',
                 types=[float],
-                requirements=[
-                    lambda x: x > 0 
-                ],
             ),
         ],
         level=['training'],
