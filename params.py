@@ -9,7 +9,7 @@ from mouse import defs as mouse_defs
 from rnn import defs as rnn_defs
 
 repoPath = pathlib.Path.cwd()
-root = pathlib.Path(repoPath / "data")
+root = pathlib.Path("/data")
 figPath = repoPath / 'figures'
 LargeFig = (7,8)
 MedFig = (4.3,4.3)

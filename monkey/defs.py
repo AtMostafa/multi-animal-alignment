@@ -71,7 +71,7 @@ def prep_general (df):
 
 def custom_r2_func(y_true, y_pred):
     "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
-    c = np.corrcoef(y_true, y_pred) ** 2
+    c = np.corrcoef(y_true.T, y_pred.T) ** 2
     return np.diag(c[-int(c.shape[0]/2):,:int(c.shape[1]/2)])
 
 custom_r2_scorer = make_scorer(custom_r2_func)
