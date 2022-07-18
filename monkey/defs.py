@@ -24,14 +24,18 @@ prep_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_prep[0]/BIN_SIZE),
                                      rel_end=int(WINDOW_prep[1]/BIN_SIZE)
                                     )
-exec_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on', 
+exec_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_exec[0]/BIN_SIZE),
                                      rel_end=int(WINDOW_exec[1]/BIN_SIZE)
                                     )
-fixation_epoch = pyal.generate_epoch_fun(start_point_name='idx_target_on', 
+fixation_epoch = pyal.generate_epoch_fun(start_point_name='idx_target_on',
                                          rel_start=int(WINDOW_prep[0]/BIN_SIZE),
                                          rel_end=int(WINDOW_prep[1]/BIN_SIZE)
                                         )
+exec_epoch_decode = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
+                                     rel_start=int(WINDOW_exec[0]/BIN_SIZE) - MAX_HISTORY,
+                                     rel_end=int(WINDOW_exec[1]/BIN_SIZE)
+                                    )
 
 def get_target_id(trial):
     return int(np.round((trial.target_direction + np.pi) / (0.25*np.pi))) - 1
@@ -67,7 +71,8 @@ def prep_general (df):
 
 def custom_r2_func(y_true, y_pred):
     "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
-    return stats.pearsonr(y_true, y_pred)[0] ** 2
+    c = np.corrcoef(y_true, y_pred) ** 2
+    return np.diag(c[-int(c.shape[0]/2):,:int(c.shape[1]/2)])
 
 custom_r2_scorer = make_scorer(custom_r2_func)
 
@@ -111,7 +116,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
         rates = np.concatenate(df_[field].values, axis=0)
         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
-        df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
+        df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca')
 
         for target in range(n_targets):
             df__ = pyal.select_trials(df_, df_.target_id==target)
@@ -122,7 +127,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
             for trial, (trial_rates,trial_vel) in enumerate(zip(df__._pca, df__.pos)):
                 AllData[session,target,trial, :, :] = trial_rates
                 AllVel[session,target,trial, :, :] = trial_vel
-    
+
     return AllData, AllVel
 
 def time_trim(a,b):

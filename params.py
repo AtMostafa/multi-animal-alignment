@@ -103,16 +103,13 @@ class panels:
     rnn_corr = (1.4, SmallH-0.3)
     rnn_raster = (2,SmallH)
     rnn_velocity = (2, TinyH)
-    # rnn_behav_corr = (LargeFig[0]/2 -0.3, MedH)
-    # rnn_cca = (2.0, MedH)
-    # rnn_cca = (1.5 * MedH/SmallH, MedH)
-    # rnn_cca_hist = (2 * MedH/SmallH,MedH)
     rnn_cca = (1.5 , MedH -0.2)
     rnn_cca_hist = (2 ,MedH-0.2)
 
-    
 class colors:
     "colors for different data types in the paper"
+    MouseM1 = 'tab:blue'
+    MouseStr = 'tab:orange'
     MainCC = 'k'
     LowerCC = 'gray'
     UpperCC = 'cornflowerblue'
