@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from rnn.simulation.networks import RNN,RNN_muscle
+from rnn.simulation.networks import RNN
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
@@ -71,18 +71,11 @@ class Runner:
 
         """
         # create model
-        if self._config.network == 'RNN':
-            model = RNN(self.task_params.input_dim, self.task_params.output_dim, 
-                        self._config.n1, 
-                        self.task_params.dt/self._config.tau, 
-                        self.dtype, noise= self._config.noise,
-                        p_recurrent = self._config.p_recurrent)
-        elif self._config.network == 'RNN_muscle':
-            model = RNN_muscle(self.task_params.input_dim, self.task_params.output_dim, 
-                        self._config.n1, 
-                        self.task_params.dt/self._config.tau, 
-                        self.dtype, noise= self._config.noise,
-                        p_recurrent = self._config.p_recurrent)
+        model = RNN(self.task_params.input_dim, self.task_params.output_dim, 
+                    self._config.n1, 
+                    self.task_params.dt/self._config.tau, 
+                    self.dtype, noise= self._config.noise,
+                    p_recurrent = self._config.p_recurrent)
         
         if self.dtype == torch.cuda.FloatTensor:
             model = model.cuda()
@@ -110,10 +103,7 @@ class Runner:
         self.model = self._create_and_initialize_weights(self.model)
 
         #train
-        if self._config.optimizer == 'FORCE':
-            lc, training_trial = self.train_force()
-        else:
-            lc, training_trial = self.train()
+        lc, training_trial = self.train()
 
         # get and save final parameters
         params1 = self.model.save_parameters()
@@ -132,8 +122,9 @@ class Runner:
         import matplotlib.pyplot as plt
         plt.figure()
         print('lc shape', np.array(lc).shape)
-        plt.plot(np.array(lc)[:,0,0], label = 'loss', color = 'b')
-        plt.plot(np.array(lc)[:,0,1], label = 'ccareg', color = 'g')
+        plt.plot(np.array(lc)[:,0,0], label = 'loss', color = 'k')
+        plt.plot(np.array(lc)[:,0,1], label = 'output loss', color = 'b')
+        plt.plot(np.array(lc)[:,0,2], label = 'ccareg', color = 'g')
         plt.xlabel("Epoch")
         plt.ylabel("Loss")
         plt.title('Training trials: ' + str(training_trial))
@@ -168,15 +159,9 @@ class Runner:
         state_dict['rnn_l1.bias_hh_l0'] = torch.FloatTensor(np.zeros(n1)) 
             
         ## output/muscle weights
-        if self._config.network == 'RNN':
-            state_dict['output.weight'] = torch.FloatTensor((np.random.rand(self.task_params.output_dim, n1)-0.5)*2.*self._config.gout) 
-            state_dict['output.bias'] = torch.FloatTensor(np.zeros(self.task_params.output_dim))
-        elif self._config.network == 'RNN_muscle':
-            state_dict['muscle.weight'] = torch.FloatTensor((np.random.rand(50, n1)-0.5)*2.*self._config.gout) 
-            state_dict['muscle.bias'] = torch.FloatTensor(np.zeros(50))
-            state_dict['output.weight'] = torch.FloatTensor((np.random.rand(self.task_params.output_dim, 2*50)-0.5)*2.*self._config.gout) 
-            state_dict['output.bias'] = torch.FloatTensor(np.zeros(self.task_params.output_dim))
-
+        state_dict['output.weight'] = torch.FloatTensor((np.random.rand(self.task_params.output_dim, n1)-0.5)*2.*self._config.gout) 
+        state_dict['output.bias'] = torch.FloatTensor(np.zeros(self.task_params.output_dim))
+    
         model.load_state_dict(state_dict, strict=True)
         return model
 
@@ -438,9 +423,9 @@ class Runner:
                 self.optimizer.step()
 
                 if regcca != 0:
-                    train_running_loss = [loss_train.detach().item(), regcca.detach().item()]
+                    train_running_loss = [loss.detach().item(), loss_train.detach().item(), regcca.detach().item()]
                 else:
-                    train_running_loss = [loss_train.detach().item(), regcca]
+                    train_running_loss = [loss.detach().item(), loss_train.detach().item(), regcca]
 
                 # values to print
                 toprint = OrderedDict()
@@ -453,65 +438,12 @@ class Runner:
                 self._log(training_trial, toprint)          
                 lc.append([train_running_loss])
                 
-                #TODO: rerun with correct threhold calc
                 training_trial += 1 
                 if training_trial >= rnn_defs.MIN_TRAINING_TRIALS: #train for at least n trials...
-                    if (np.mean(np.array(lc)[-20:,0,0]) <= rnn_defs.LOSS_THRESHOLD) or \
+                    if (np.mean(np.array(lc)[-10:,0,0]) <= rnn_defs.LOSS_THRESHOLD) or \
                      (training_trial >= rnn_defs.MAX_TRAINING_TRIALS): #...and up to m trials
                         finished_training = True
                         break
-
-        return lc, training_trial
-
-    def train_force(self):
-        """ 
-        Train a model suing FORCE. 
-
-        Returns
-        -------
-        lc: list
-            loss during training
-        """
-        lc = [] # save loss
-        training_trial = 0
-        #no gradients needed in force training
-        with torch.no_grad():
-
-            # initialize the inverse correlation matrix
-            P = torch.eye(self._config.n1)/self._config.lr
-            P = P.type(self.dtype)
-
-            # get inverse of output weights
-            output_weights_inv = torch.linalg.pinv(self.model.output.weight.clone().detach())
-
-            finished_training = False
-            while (not finished_training):
-                train_running_loss = 0.0
-                
-                for batch_idx, (stimulus, target) in enumerate(DataLoader(self.dataset, drop_last = True, batch_size = 1, shuffle = True)):                
-                    stimulus, target = stimulus.transpose(1,0).type(self.dtype), target.transpose(1,0).type(self.dtype)
-                                        
-                    output, _, P = self.model.force_training(stimulus, P, output_weights_inv, target)
-
-                    #calculate loss
-                    loss = self.criterion(output[50:], target[50:]) # only look at time points > 50dt  
-                    loss_train = loss.mean() 
-
-                    train_running_loss = [loss_train.detach().item(), 0]
-
-                    # values to print
-                    toprint = OrderedDict()
-                    toprint['Loss'] = loss_train
-                    self._log(training_trial, toprint)          
-                    lc.append([train_running_loss])
-
-                    training_trial += 1 
-                    if training_trial >= 500: #train for at least n trials...
-                    # if training_trial >= rnn_defs.MIN_TRAINING_TRIALS: #train for at least n trials...
-                        if (np.mean(np.array(lc)[-20:,0,0]) <= rnn_defs.LOSS_THRESHOLD) or \
-                        (training_trial >= rnn_defs.MAX_TRAINING_TRIALS): #...and up to m trials
-                            finished_training = True
-                            break
 
         return lc, training_trial
 

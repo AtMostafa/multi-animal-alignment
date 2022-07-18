@@ -10,14 +10,6 @@ class ConfigTemplate:
                 name='sim_number',
                 types=[type(None), int],
             ),
-            config_field.Field(
-                name='network',
-                types=[str],
-                requirements=[
-                    lambda x: x in ['RNN', 'RNN_muscle']
-                ],
-                default = 'RNN'
-            ),
         ],
         level=['simulation'],
     )

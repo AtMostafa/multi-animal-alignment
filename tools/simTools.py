@@ -232,43 +232,43 @@ def get_processed_pyaldata(seed, sim, epoch_fun = None):
 
     return pyal_df
 
-# def get_cc_within(dfs, n_components, epoch_fun = None):
-#     """
-#     Get canonical correlations within trials for each network
+def get_cc_within(dfs, n_components, epoch_fun = None):
+    """
+    Get canonical correlations within trials for each network
 
-#     Parameters
-#     ----------
-#     dfs: list of Pandas dataframes
-#         dataframes for simulation data for each network in pyaldata format
-#     n_components: int
-#         number of components for PCA
-#     epoch_fun : function
-#         function that takes a trial and returns the epoch to extract
+    Parameters
+    ----------
+    dfs: list of Pandas dataframes
+        dataframes for simulation data for each network in pyaldata format
+    n_components: int
+        number of components for PCA
+    epoch_fun : function
+        function that takes a trial and returns the epoch to extract
 
-#     Returns
-#     -------
-#     ccs: list
-#         canonical correlations for each network
-#     """
-#     data = dt.get_data_array(dfs, epoch_fun, area = 'MCx', model = n_components)
+    Returns
+    -------
+    ccs: list
+        canonical correlations for each network
+    """
+    data = dt.get_data_array(dfs, epoch_fun, area = 'MCx', model = n_components)
 
-#     n_shared_trial1 = data.shape[2]
-#     trialList1 = np.arange(n_shared_trial1)
-#     ccs=[]
-#     for session, sessionData in enumerate(data):
-#         r = []
-#         for n in range(params.n_iter*10):
-#             params.rng.shuffle(trialList1)
-#             # non-overlapping randomised trials
-#             trial1 = trialList1[:n_shared_trial1//2]
-#             trial2 = trialList1[-(n_shared_trial1//2):]
-#             data1 = np.reshape(sessionData[:,trial1,:,:], (-1,n_components))
-#             data2 = np.reshape(sessionData[:,trial2,:,:], (-1,n_components))
-#             r.append(dt.canoncorr(data1, data2))
-#         ccs.append(r)
-#     ccs = np.array(ccs)
-#     ccs = np.percentile(ccs, 99, axis=1).T
-#     return ccs
+    n_shared_trial1 = data.shape[2]
+    trialList1 = np.arange(n_shared_trial1)
+    ccs=[]
+    for session, sessionData in enumerate(data):
+        r = []
+        for n in range(params.n_iter*10):
+            params.rng.shuffle(trialList1)
+            # non-overlapping randomised trials
+            trial1 = trialList1[:n_shared_trial1//2]
+            trial2 = trialList1[-(n_shared_trial1//2):]
+            data1 = np.reshape(sessionData[:,trial1,:,:], (-1,n_components))
+            data2 = np.reshape(sessionData[:,trial2,:,:], (-1,n_components))
+            r.append(dt.canoncorr(data1, data2))
+        ccs.append(r)
+    ccs = np.array(ccs)
+    ccs = np.percentile(ccs, 99, axis=1).T
+    return ccs
 
 def get_cc_across(dfs, n_components, epoch_fun = None):
     """
@@ -313,49 +313,49 @@ def get_cc_across(dfs, n_components, epoch_fun = None):
 
     return ccs
 
-# def get_cc_across_groups(dfs1, dfs2, n_components, epoch_fun = None):
-#     """
-#     Get canonical correlations across networks of different simulation groups
+def get_cc_across_groups(dfs1, dfs2, n_components, epoch_fun = None):
+    """
+    Get canonical correlations across networks of different simulation groups
 
-#     Parameters
-#     ----------
-#     dfs1: list of Pandas dataframes
-#         dataframes for simulation data for each network in pyaldata format for the first group
-#     dfs2: list of Pandas dataframes
-#         dataframes for simulation data for each network in pyaldata format for the second group
-#     n_components: int
-#         number of components for PCA
-#     epoch_fun : function
-#         function that takes a trial and returns the epoch to extract
+    Parameters
+    ----------
+    dfs1: list of Pandas dataframes
+        dataframes for simulation data for each network in pyaldata format for the first group
+    dfs2: list of Pandas dataframes
+        dataframes for simulation data for each network in pyaldata format for the second group
+    n_components: int
+        number of components for PCA
+    epoch_fun : function
+        function that takes a trial and returns the epoch to extract
 
-#     Returns
-#     -------
-#     ccs: np array
-#         canonical correlations for each network
-#     """
-#     pairFileList1 = []
-#     for I in range(len(dfs1)):
-#         for J in range(len(dfs2)):
-#             if J<=I: continue  # to repetitions
-#             pairFileList1.append((I,J))
+    Returns
+    -------
+    ccs: np array
+        canonical correlations for each network
+    """
+    pairFileList1 = []
+    for I in range(len(dfs1)):
+        for J in range(len(dfs2)):
+            if J<=I: continue  # to repetitions
+            pairFileList1.append((I,J))
 
-#     #setup data
-#     side1df = [dfs1[i] for i,_ in pairFileList1]
-#     side2df = [dfs2[j] for _,j in pairFileList1]
-#     AllData1 = dt.get_data_array(side1df, epoch_fun, area='MCx', model=n_components)
-#     AllData2 = dt.get_data_array(side2df, epoch_fun, area='MCx', model=n_components)
+    #setup data
+    side1df = [dfs1[i] for i,_ in pairFileList1]
+    side2df = [dfs2[j] for _,j in pairFileList1]
+    AllData1 = dt.get_data_array(side1df, epoch_fun, area='MCx', model=n_components)
+    AllData2 = dt.get_data_array(side2df, epoch_fun, area='MCx', model=n_components)
 
-#     #calculate ccs  
-#     _,_, min_trials, min_time,_ = np.min((AllData1.shape,AllData2.shape),axis=0)
-#     ccs=[]
-#     for sessionData1,sessionData2 in zip(AllData1,AllData2):
-#         data1 = np.reshape(sessionData1[:,:min_trials,:min_time,:], (-1,n_components))
-#         data2 = np.reshape(sessionData2[:,:min_trials,:min_time,:], (-1,n_components))
-#         ccs.append(dt.canoncorr(data1, data2))
+    #calculate ccs  
+    _,_, min_trials, min_time,_ = np.min((AllData1.shape,AllData2.shape),axis=0)
+    ccs=[]
+    for sessionData1,sessionData2 in zip(AllData1,AllData2):
+        data1 = np.reshape(sessionData1[:,:min_trials,:min_time,:], (-1,n_components))
+        data2 = np.reshape(sessionData2[:,:min_trials,:min_time,:], (-1,n_components))
+        ccs.append(dt.canoncorr(data1, data2))
     
-#     ccs = np.array(ccs).T
+    ccs = np.array(ccs).T
 
-#     return ccs
+    return ccs
 
 def trim_across_groups_rnn_corr(dfs1, dfs2):
     """

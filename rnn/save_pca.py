@@ -18,7 +18,7 @@ seed = rnn_defs.SEEDS1[0]
 rnn_epoch = rnn_defs.exec_epoch
 
 # get and process testing data and output from previously trained network
-df = st.get_processed_pyaldata(seed, sim_number, subtract_mean=False)
+df = st.get_processed_pyaldata(seed, sim_number)
 move_onsets = df.idx_movement_on.values
 df = pyal.restrict_to_interval(df,epoch_fun = rnn_epoch)
 
