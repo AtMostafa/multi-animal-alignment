@@ -62,11 +62,12 @@ class LSTMDecoder():
                 labels = torch.from_numpy(y_train[j, ...]).float()
 
                 outputs = self.model(inputs)
-                train_loss = self.criterion(outputs, labels)
+                loss = self.criterion(outputs, labels)
                 self.optimizer.zero_grad()
-                train_loss.backward()
-                self.optimizer.step()
-            logging.info(train_loss)
+                if not torch.isnan(loss):
+                    loss.backward()
+                    self.optimizer.step()
+            logging.info(loss)
 
     def predict(self, x_test, y_test):
         "Predict using the decoder and save the prediction score"
