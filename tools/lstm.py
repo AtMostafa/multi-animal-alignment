@@ -1,10 +1,5 @@
-import numpy as np
-import pandas as pd
-import pyaldata as pyal
-from sklearn.decomposition import PCA
-from typing import Callable
 import logging
-
+import numpy as np
 import torch
 
 torch.manual_seed(1)
@@ -12,7 +7,10 @@ torch.manual_seed(1)
 
 def custom_r2_func(y_true, y_pred):
     "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
-    c = np.corrcoef(y_true.T, y_pred.T) ** 2
+
+    mask = np.logical_and(np.logical_not(np.isnan(y_true)),
+                          np.logical_not(np.isnan(y_pred)))
+    c = np.corrcoef(y_true[mask].T, y_pred[mask].T) ** 2
     return np.diag(c[-int(c.shape[0]/2):,:int(c.shape[1]/2)])
 
 
@@ -24,7 +22,7 @@ class LSTM(torch.nn.Module):
         self.lstm1 = torch.nn.LSTMCell(input_dims, self.hidden_features)
         self.lstm2 = torch.nn.LSTMCell(self.hidden_features, self.hidden_features)
         self.linear = torch.nn.Linear(self.hidden_features, output_dims)
-        
+
     def forward(self, x):
         "The forward pass"
         outputs = []
@@ -49,28 +47,27 @@ class LSTMDecoder():
         self.optimizer = None
         self.score = None
 
-    def fit(self, x_train, y_train, criterion=None, optimizer=None, lr=0.001, epochs = 10):
+    def fit(self, x_train, y_train,
+            criterion=None, optimizer=None, l_r=0.001, epochs = 10):
         "Train the decoder"
         if not criterion:
             self.criterion = torch.nn.MSELoss()
         if not optimizer:
-            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr=l_r)
 
         self.model.train()
-        for _ in range(epochs): 
+        for _ in range(epochs):
             for j in range(x_train.shape[0]):
-                x = x_train[j, ...]
-                y = y_train[j, ...]
-                inputs = torch.from_numpy(x).float()
-                labels = torch.from_numpy(y).float()
-                
+                inputs = torch.from_numpy(x_train[j, ...]).float()
+                labels = torch.from_numpy(y_train[j, ...]).float()
+
                 outputs = self.model(inputs)
                 train_loss = self.criterion(outputs, labels)
                 self.optimizer.zero_grad()
                 train_loss.backward()
                 self.optimizer.step()
             logging.info(train_loss)
-    
+
     def predict(self, x_test, y_test):
         "Predict using the decoder and save the prediction score"
         self.model.eval()
