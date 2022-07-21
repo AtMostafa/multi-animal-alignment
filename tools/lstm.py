@@ -58,12 +58,13 @@ class LSTMDecoder():
         self.model.train()
         for _ in range(epochs):
             for j in range(x_train.shape[0]):
+                self.optimizer.zero_grad()
+
                 inputs = torch.from_numpy(x_train[j, ...]).float()
                 labels = torch.from_numpy(y_train[j, ...]).float()
 
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, labels)
-                self.optimizer.zero_grad()
                 if not torch.isnan(loss):
                     loss.backward()
                     self.optimizer.step()
