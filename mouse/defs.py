@@ -164,7 +164,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
         rates = np.concatenate(df_[field].values, axis=0)
         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
-        vel_mean = np.mean(pyal.concat_trials(df, 'hTrjB'), axis=0)
+        vel_mean = np.nanmean(pyal.concat_trials(df, 'hTrjB'), axis=0)
 
         for target in range(n_targets):
             df__ = pyal.select_trials(df_, df_.target_id==target)
