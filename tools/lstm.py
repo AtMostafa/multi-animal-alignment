@@ -23,7 +23,7 @@ class LSTM(torch.nn.Module):
         self.lstm2 = torch.nn.LSTMCell(self.hidden_features, self.hidden_features)
         self.linear = torch.nn.Linear(self.hidden_features, output_dims)
 
-    def forward(self, x):
+    def forward(self, x_in):
         "The forward pass"
         outputs = []
         h_t = torch.zeros(1,self.hidden_features, dtype=torch.float32)
@@ -31,7 +31,7 @@ class LSTM(torch.nn.Module):
         h_t2 = torch.zeros(1,self.hidden_features, dtype=torch.float32)
         c_t2 = torch.zeros(1,self.hidden_features, dtype=torch.float32)
 
-        for time_step in x.split(1, dim=0):
+        for time_step in x_in.split(1, dim=0):
             h_t, c_t = self.lstm1(time_step, (h_t, c_t)) # initial hidden and cell states
             h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2)) # initial hidden and cell states
             output = self.linear(h_t2)
@@ -46,6 +46,7 @@ class LSTMDecoder():
         self.criterion = None
         self.optimizer = None
         self.score = None
+        self._fitted = False
 
     def fit(self, x_train, y_train,
             criterion=None, optimizer=None, l_r=0.001, epochs = 10):
@@ -69,9 +70,13 @@ class LSTMDecoder():
                     loss.backward()
                     self.optimizer.step()
             logging.info(loss)
+        self._fitted = True
 
     def predict(self, x_test, y_test):
         "Predict using the decoder and save the prediction score"
+        if not self._fitted:
+            logging.error("Model hsn't trained yet. Run the `fit()` method first.")
+
         self.model.eval()
         x_test_ = torch.from_numpy(x_test).float()
         y_test_ = torch.from_numpy(y_test).float()
