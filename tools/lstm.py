@@ -15,7 +15,7 @@ def custom_r2_func(y_true, y_pred):
 
 
 class LSTM(torch.nn.Module):
-    "The LSTM nework"
+    "The LSTM network"
     def __init__(self, hidden_features=300, input_dims=10, output_dims = 2):
         super().__init__()
         self.hidden_features = hidden_features
@@ -71,6 +71,7 @@ class LSTMDecoder():
                     self.optimizer.step()
             logging.info(loss)
         self._fitted = True
+        self.score = None
 
     def predict(self, x_test, y_test):
         "Predict using the decoder and save the prediction score"
