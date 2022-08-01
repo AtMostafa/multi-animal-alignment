@@ -117,6 +117,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
         rates = np.concatenate(df_[field].values, axis=0)
         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca')
+        vel_mean = np.nanmean(pyal.concat_trials(df, 'pos'), axis=0)
 
         for target in range(n_targets):
             df__ = pyal.select_trials(df_, df_.target_id==target)
@@ -126,7 +127,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
             df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
             for trial, (trial_rates,trial_vel) in enumerate(zip(df__._pca, df__.pos)):
                 AllData[session,target,trial, :, :] = trial_rates
-                AllVel[session,target,trial, :, :] = trial_vel
+                AllVel[session,target,trial, :, :] = trial_vel - vel_mean
 
     return AllData, AllVel
 

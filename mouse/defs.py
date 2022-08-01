@@ -40,7 +40,8 @@ exec_epoch_decode = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
 
 def custom_r2_func(y_true, y_pred):
     "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
-    return stats.pearsonr(y_true, y_pred)[0] ** 2
+    c = np.corrcoef(y_true.T, y_pred.T) ** 2
+    return np.diag(c[-int(c.shape[0]/2):,:int(c.shape[1]/2)])
 
 custom_r2_scorer = make_scorer(custom_r2_func)
 
@@ -163,6 +164,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
         rates = np.concatenate(df_[field].values, axis=0)
         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
+        vel_mean = np.nanmean(pyal.concat_trials(df, 'hTrjB'), axis=0)
 
         for target in range(n_targets):
             df__ = pyal.select_trials(df_, df_.target_id==target)
@@ -172,7 +174,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
             df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
             for trial, (trial_rates,trial_vel) in enumerate(zip(df__._pca, df__.hTrjB)):
                 AllData[session,target,trial, :, :] = trial_rates
-                AllVel[session,target,trial, :, :] = trial_vel
+                AllVel[session,target,trial, :, :] = trial_vel- vel_mean
     
     return AllData, AllVel
 
