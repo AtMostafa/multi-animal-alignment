@@ -16,33 +16,42 @@ def custom_r2_func(y_true, y_pred):
 
 class LSTM(torch.nn.Module):
     "The LSTM network"
-    def __init__(self, hidden_features=300, input_dims=10, output_dims = 2):
+    def __init__(self, dtype, hidden_features=300, input_dims=10, output_dims = 2):
         super().__init__()
         self.hidden_features = hidden_features
         self.lstm1 = torch.nn.LSTMCell(input_dims, self.hidden_features)
         self.lstm2 = torch.nn.LSTMCell(self.hidden_features, self.hidden_features)
         self.linear = torch.nn.Linear(self.hidden_features, output_dims)
+        self.dtype = dtype
 
     def forward(self, x_in):
         "The forward pass"
         outputs = []
-        h_t = torch.zeros(1,self.hidden_features, dtype=torch.float32)
-        c_t = torch.zeros(1,self.hidden_features, dtype=torch.float32)
-        h_t2 = torch.zeros(1,self.hidden_features, dtype=torch.float32)
-        c_t2 = torch.zeros(1,self.hidden_features, dtype=torch.float32)
+        h_t = torch.zeros(1,self.hidden_features).type(self.dtype)
+        c_t = torch.zeros(1,self.hidden_features).type(self.dtype)
+        h_t2 = torch.zeros(1,self.hidden_features).type(self.dtype)
+        c_t2 = torch.zeros(1,self.hidden_features).type(self.dtype)
+        outputs = torch.zeros(x_in.shape[0], 2).type(self.dtype)
 
-        for time_step in x_in.split(1, dim=0):
+        for i, time_step in enumerate(x_in.split(1, dim=0)):
             h_t, c_t = self.lstm1(time_step, (h_t, c_t)) # initial hidden and cell states
             h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2)) # initial hidden and cell states
-            output = self.linear(h_t2)
-            outputs.append(output)
-        outputs = torch.vstack(outputs)
+            outputs[i] = self.linear(h_t2)
         return outputs
 
 class LSTMDecoder():
     "LSTM Decoder object implemented for time-series "
     def __init__(self, input_dims=40, output_dims = 2):
-        self.model = LSTM(input_dims=input_dims, output_dims=output_dims)
+        if torch.cuda.is_available():
+            self.dtype = torch.cuda.FloatTensor
+            self.device = torch.device("cuda:{}".format(0))
+        else:
+            self.dtype = torch.FloatTensor
+            self.device = torch.device("cpu")
+
+        self.model = LSTM(self.dtype, input_dims=input_dims, output_dims=output_dims)
+        if self.model.dtype == torch.cuda.FloatTensor:
+            self.model = self.model.cuda()
         self.criterion = None
         self.optimizer = None
         self.score = None
@@ -57,12 +66,16 @@ class LSTMDecoder():
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=l_r)
 
         self.model.train()
+
+        x_train_t = torch.from_numpy(x_train).type(self.dtype)
+        y_train_t = torch.from_numpy(y_train).type(self.dtype)
+
         for _ in range(epochs):
             for j in range(x_train.shape[0]):
                 self.optimizer.zero_grad()
 
-                inputs = torch.from_numpy(x_train[j, ...]).float()
-                labels = torch.from_numpy(y_train[j, ...]).float()
+                inputs = x_train_t[j, ...]
+                labels = y_train_t[j, ...]
 
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, labels)
@@ -79,15 +92,15 @@ class LSTMDecoder():
             logging.error("Model hsn't trained yet. Run the `fit()` method first.")
 
         self.model.eval()
-        x_test_ = torch.from_numpy(x_test).float()
-        y_test_ = torch.from_numpy(y_test).float()
+        x_test_ = torch.from_numpy(x_test).type(self.dtype)
+        y_test_ = torch.from_numpy(y_test).type(self.dtype)
 
         test_labels = []
         test_pred = []
         for inputs, labels in zip(x_test_, y_test_):  # unravel the batches
             output = self.model(inputs)
-            pred = output.detach().numpy()
-            lab = labels.detach().numpy()
+            pred = output.cpu().detach().numpy()
+            lab = labels.cpu().detach().numpy()
             test_labels.append(lab)
             test_pred.append(pred)
 
