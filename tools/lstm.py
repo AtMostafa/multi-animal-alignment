@@ -26,12 +26,11 @@ class LSTM(torch.nn.Module):
 
     def forward(self, x_in):
         "The forward pass"
-        outputs = []
         h_t = torch.zeros(1,self.hidden_features).type(self.dtype)
         c_t = torch.zeros(1,self.hidden_features).type(self.dtype)
         h_t2 = torch.zeros(1,self.hidden_features).type(self.dtype)
         c_t2 = torch.zeros(1,self.hidden_features).type(self.dtype)
-        outputs = torch.zeros(x_in.shape[0], 2).type(self.dtype)
+        outputs = torch.zeros(x_in.shape[0], self.linear.out_features).type(self.dtype)
 
         for i, time_step in enumerate(x_in.split(1, dim=0)):
             h_t, c_t = self.lstm1(time_step, (h_t, c_t)) # initial hidden and cell states
@@ -89,7 +88,7 @@ class LSTMDecoder():
     def predict(self, x_test, y_test):
         "Predict using the decoder and save the prediction score"
         if not self._fitted:
-            logging.error("Model hsn't trained yet. Run the `fit()` method first.")
+            logging.error("Model hasn't trained yet. Run the `fit()` method first.")
 
         self.model.eval()
         x_test_ = torch.from_numpy(x_test).type(self.dtype)
@@ -110,3 +109,10 @@ class LSTMDecoder():
         self.score = cor_
 
         return pred, lab
+
+
+if __name__ == "__main__":
+    data = np.random.rand(1200, 1, 40)
+    label = np.random.randint(1,5,(1200,1 , 3))
+    model = LSTMDecoder(40, 3)
+    model.fit(data,label)
