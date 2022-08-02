@@ -110,7 +110,7 @@ class colors:
     "colors for different data types in the paper"
     MouseM1 = 'tab:blue'
     MouseStr = 'tab:orange'
-    MainCC = 'k'
+    MainCC = 'r'
     LowerCC = 'gray'
     UpperCC = 'cornflowerblue'
     Sim1CC ='cornflowerblue'

@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 import torch
+from tqdm import tqdm
 
 torch.manual_seed(1)
 
@@ -26,7 +27,6 @@ class LSTM(torch.nn.Module):
 
     def forward(self, x_in):
         "The forward pass"
-        outputs = []
         h_t = torch.zeros(1,self.hidden_features).type(self.dtype)
         c_t = torch.zeros(1,self.hidden_features).type(self.dtype)
         h_t2 = torch.zeros(1,self.hidden_features).type(self.dtype)
@@ -70,7 +70,7 @@ class LSTMDecoder():
         x_train_t = torch.from_numpy(x_train).type(self.dtype)
         y_train_t = torch.from_numpy(y_train).type(self.dtype)
 
-        for _ in range(epochs):
+        for _ in tqdm(range(epochs)):
             for j in range(x_train.shape[0]):
                 self.optimizer.zero_grad()
 
@@ -111,3 +111,10 @@ class LSTMDecoder():
         self.score = cor_
 
         return pred, lab
+
+
+if __name__ == "__main__":
+    data = np.random.rand(1200, 1, 40)
+    label = np.random.randint(1,5,(1200,1 , 3))
+    model = LSTMDecoder(40, 3)
+    model.fit(data,label)
