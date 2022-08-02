@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 import torch
+from tqdm import tqdm
 
 torch.manual_seed(1)
 
@@ -69,7 +70,7 @@ class LSTMDecoder():
         x_train_t = torch.from_numpy(x_train).type(self.dtype)
         y_train_t = torch.from_numpy(y_train).type(self.dtype)
 
-        for _ in range(epochs):
+        for _ in tqdm(range(epochs)):
             for j in range(x_train.shape[0]):
                 self.optimizer.zero_grad()
 
