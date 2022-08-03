@@ -80,7 +80,8 @@ class LSTMDecoder():
                 if not torch.isnan(loss):
                     loss.backward()
                     self.optimizer.step()
-            logging.info(loss)
+            # logging.info(loss)
+            # print(loss)
         self._fitted = True
         self.score = None
 
