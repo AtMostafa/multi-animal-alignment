@@ -3,9 +3,6 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-torch.manual_seed(1)
-
-
 def custom_r2_func(y_true, y_pred):
     "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
 
@@ -19,6 +16,7 @@ class LSTM(torch.nn.Module):
     "The LSTM network"
     def __init__(self, dtype, hidden_features=300, input_dims=10, output_dims = 2):
         super().__init__()
+        torch.manual_seed(12345)
         self.hidden_features = hidden_features
         self.lstm1 = torch.nn.LSTMCell(input_dims, self.hidden_features)
         self.lstm2 = torch.nn.LSTMCell(self.hidden_features, self.hidden_features)
