@@ -65,8 +65,10 @@ class LSTMDecoder():
 
         self.model.train()
 
-        x_train_t = torch.from_numpy(x_train).type(self.dtype)
-        y_train_t = torch.from_numpy(y_train).type(self.dtype)
+        #shuffle trials
+        p = np.random.permutation(x_train.shape[0])
+        x_train_t = torch.from_numpy(x_train[p]).type(self.dtype)
+        y_train_t = torch.from_numpy(y_train[p]).type(self.dtype)
 
         for _ in tqdm(range(epochs)):
             for j in range(x_train.shape[0]):
