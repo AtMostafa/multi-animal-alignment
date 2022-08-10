@@ -60,7 +60,10 @@ class LSTMDecoder():
 
     def fit(self, x_train, y_train,
             criterion=None, optimizer=None, l_r=0.001, epochs = 10):
-        "Train the decoder"
+        """
+        Train the decoder
+        `x_train` and `y_train` of shape: trial x time x [component or output-variable]
+        """
         if not criterion:
             self.criterion = torch.nn.MSELoss()
         if not optimizer:
@@ -90,7 +93,10 @@ class LSTMDecoder():
         self.score = None
 
     def predict(self, x_test, y_test):
-        "Predict using the decoder and save the prediction score"
+        """
+        Predict using the decoder and save the prediction score
+        `x_test` and `y_test` of shape: trial x time x [component or output-variable]
+        """
         if not self._fitted:
             logging.error("Model hasn't trained yet. Run the `fit()` method first.")
 
