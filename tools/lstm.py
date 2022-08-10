@@ -3,6 +3,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+rng = np.random.default_rng(np.random.SeedSequence(12345))
+
 def custom_r2_func(y_true, y_pred):
     "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
 
@@ -16,7 +18,7 @@ class LSTM(torch.nn.Module):
     "The LSTM network"
     def __init__(self, dtype, hidden_features=300, input_dims=10, output_dims = 2):
         super().__init__()
-        torch.manual_seed(12345)
+        torch.manual_seed(2147483647)
         self.hidden_features = hidden_features
         self.lstm1 = torch.nn.LSTMCell(input_dims, self.hidden_features)
         self.lstm2 = torch.nn.LSTMCell(self.hidden_features, self.hidden_features)
@@ -40,6 +42,7 @@ class LSTM(torch.nn.Module):
 class LSTMDecoder():
     "LSTM Decoder object implemented for time-series "
     def __init__(self, input_dims=40, output_dims = 2):
+        torch.manual_seed(2147483647)
         if torch.cuda.is_available():
             self.dtype = torch.cuda.FloatTensor
             self.device = torch.device("cuda:{}".format(0))
@@ -66,9 +69,9 @@ class LSTMDecoder():
         self.model.train()
 
         #shuffle trials
-        p = np.random.permutation(x_train.shape[0])
-        x_train_t = torch.from_numpy(x_train[p]).type(self.dtype)
-        y_train_t = torch.from_numpy(y_train[p]).type(self.dtype)
+        ind = rng.permutation(x_train.shape[0])
+        x_train_t = torch.from_numpy(x_train[ind]).type(self.dtype)
+        y_train_t = torch.from_numpy(y_train[ind]).type(self.dtype)
 
         for _ in tqdm(range(epochs)):
             for j in range(x_train.shape[0]):
@@ -82,8 +85,7 @@ class LSTMDecoder():
                 if not torch.isnan(loss):
                     loss.backward()
                     self.optimizer.step()
-            # logging.info(loss)
-            # print(loss)
+
         self._fitted = True
         self.score = None
 
@@ -100,17 +102,14 @@ class LSTMDecoder():
         test_pred = []
         for inputs, labels in zip(x_test_, y_test_):  # unravel the batches
             output = self.model(inputs)
-            pred = output.cpu().detach().numpy()
-            lab = labels.cpu().detach().numpy()
-            test_labels.append(lab)
-            test_pred.append(pred)
+            test_pred.append(output.cpu().detach().numpy())
+            test_labels.append(labels.cpu().detach().numpy())
 
         pred = np.concatenate(test_pred, axis=0)
-        lab = np.concatenate(test_labels, axis=0)
-        cor_ = custom_r2_func(pred,lab)
-        self.score = cor_
+        label = np.concatenate(test_labels, axis=0)
+        self.score = custom_r2_func(pred,label)
 
-        return pred, lab
+        return pred, label
 
 
 if __name__ == "__main__":
@@ -118,5 +117,5 @@ if __name__ == "__main__":
     label = np.random.randint(1,5,(1200,1 , 3))
     model = LSTMDecoder(40, 3)
     model.fit(data,label)
-    pred, label = model.predict(data,label)
+    pr, lab = model.predict(data,label)
     print()
