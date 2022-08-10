@@ -118,3 +118,5 @@ if __name__ == "__main__":
     label = np.random.randint(1,5,(1200,1 , 3))
     model = LSTMDecoder(40, 3)
     model.fit(data,label)
+    pred, label = model.predict(data,label)
+    print()
