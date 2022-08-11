@@ -82,6 +82,9 @@ class LSTMDecoder():
 
                 inputs = x_train_t[j, ...]
                 labels = y_train_t[j, ...]
+                mask = torch.logical_not(torch.isnan(labels[:,0]))
+                inputs = inputs[mask,:]
+                labels = labels[mask,:]
 
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, labels)
