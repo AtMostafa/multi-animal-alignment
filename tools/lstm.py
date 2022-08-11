@@ -123,10 +123,11 @@ class LSTMDecoder():
 
 
 if __name__ == "__main__":
-    data = np.random.rand(50, 1000, 40)
-    label = np.array(np.random.randint(1,5,(50, 1000 , 3)),dtype=np.float64)
-    label[:2,:10,:] = np.nan
+    x = np.random.rand(50, 1000, 40)
+    y = np.sin(x**2+2)*x**2
+    y[:2,:10,:] = np.nan
+    y = y[..., :3]
     model = LSTMDecoder(40, 3)
-    model.fit(data,label)
-    pr, lab = model.predict(data,label)
+    model.fit(x,y)
+    pr, lab = model.predict(x,y)
     print()
