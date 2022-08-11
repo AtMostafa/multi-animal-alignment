@@ -111,7 +111,7 @@ def plot_m1_decoding(AllDFs):
             lstm_model.predict(x_test, y_test)
             fold_score.append(lstm_model.score)
         fold_score = np.array(fold_score)
-        reg_scores.append(np.median(fold_score))
+        reg_scores.append(np.median(fold_score, axis=0).mean())
 
     pop_score_day = np.array(reg_scores)
 
