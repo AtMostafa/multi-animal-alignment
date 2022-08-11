@@ -107,11 +107,11 @@ def plot_m1_decoding(AllDFs):
             y_train, y_test = AllVel1[train_index,...], AllVel1[test_index,...]
 
             lstm_model = lstm.LSTMDecoder(input_dims=X1.shape[-1], output_dims=3)
-            lstm_model.fit(x_train=x_train, y_train=y_train)
+            lstm_model.fit(x_train=x_train, y_train=y_train, epochs = 20)
             lstm_model.predict(x_test, y_test)
             fold_score.append(lstm_model.score)
         fold_score = np.array(fold_score)
-        reg_scores.append(np.median(fold_score, axis=0).mean())
+        reg_scores.append(np.median(fold_score, axis=0))
 
     pop_score_day = np.array(reg_scores)
 
