@@ -91,7 +91,7 @@ def plot_m1_decoding(AllDFs):
         AllData = dt.add_history_to_data_array(AllData, defs.MAX_HISTORY)
         AllData = AllData[...,defs.MAX_HISTORY:,:]
         AllVel = AllVel[...,defs.MAX_HISTORY:,:]
-
+        
         *_,n_time,n_comp = AllData.shape
         AllData1 = AllData[0,...]
         AllVel1 = AllVel[0,...]
@@ -204,11 +204,8 @@ ax = fig.add_subplot()
 
 
 allDFs_M1, _ = get_full_mouse_data()
-
-
-for df in allDFs_M1:
-    
-
+     
+# del allDFs_M1[1]
 aligned, unaligned, within = plot_m1_decoding(allDFs_M1)
 
 
