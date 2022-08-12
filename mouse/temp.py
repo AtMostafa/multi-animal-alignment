@@ -101,7 +101,7 @@ def plot_m1_decoding(AllDFs):
         AllVel1 = AllVel1.reshape((-1,n_time,3))
 
         fold_score =[]
-        kf = KFold(n_splits=10)
+        kf = KFold(n_splits=20)
         for train_index, test_index in kf.split(X1[:,0,0]):
             x_train, x_test = X1[train_index,...], X1[test_index,...]
             y_train, y_test = AllVel1[train_index,...], AllVel1[test_index,...]
@@ -204,6 +204,10 @@ ax = fig.add_subplot()
 
 
 allDFs_M1, _ = get_full_mouse_data()
+
+
+for df in allDFs_M1:
+    
 
 aligned, unaligned, within = plot_m1_decoding(allDFs_M1)
 
