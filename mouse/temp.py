@@ -91,7 +91,6 @@ def plot_m1_decoding(AllDFs):
         AllData = dt.add_history_to_data_array(AllData, defs.MAX_HISTORY)
         AllData = AllData[...,defs.MAX_HISTORY:,:]
         AllVel = AllVel[...,defs.MAX_HISTORY:,:]
-        
         *_,n_time,n_comp = AllData.shape
         AllData1 = AllData[0,...]
         AllVel1 = AllVel[0,...]
@@ -99,15 +98,16 @@ def plot_m1_decoding(AllDFs):
         # resizing
         X1 = AllData1.reshape((-1, n_time, n_comp))
         AllVel1 = AllVel1.reshape((-1,n_time,3))
+        print(f'i={i}; n-unit={df.M1_rates[0].shape}; df={df.file[0]}')
 
         fold_score =[]
-        kf = KFold(n_splits=20)
+        kf = KFold(n_splits=10)
         for train_index, test_index in kf.split(X1[:,0,0]):
             x_train, x_test = X1[train_index,...], X1[test_index,...]
             y_train, y_test = AllVel1[train_index,...], AllVel1[test_index,...]
 
             lstm_model = lstm.LSTMDecoder(input_dims=X1.shape[-1], output_dims=3)
-            lstm_model.fit(x_train=x_train, y_train=y_train, epochs = 20)
+            lstm_model.fit(x_train=x_train, y_train=y_train, epochs = 10)
             lstm_model.predict(x_test, y_test)
             fold_score.append(lstm_model.score)
         fold_score = np.array(fold_score)
