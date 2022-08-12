@@ -86,7 +86,7 @@ def plot_m1_decoding(AllDFs):
     reg_scores = []
     for i, df in enumerate(AllDFs):
         AllData, AllVel = defs.get_data_array_and_vel([df], defs.exec_epoch_decode, area=defs.areas[0],
-                                                      n_components=defs.n_components)
+                                                      n_components=15)
         # adding history
         AllData = dt.add_history_to_data_array(AllData, defs.MAX_HISTORY)
         AllData = AllData[...,defs.MAX_HISTORY:,:]
@@ -205,7 +205,6 @@ ax = fig.add_subplot()
 
 allDFs_M1, _ = get_full_mouse_data()
      
-# del allDFs_M1[1]
 aligned, unaligned, within = plot_m1_decoding(allDFs_M1)
 
 
