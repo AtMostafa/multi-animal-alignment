@@ -5,13 +5,12 @@ import torch
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 
 def custom_r2_func(y_true, y_pred):
-    """
-    $R^2$ value as Coefficient of determination
-    Both inputs of shape: time x features
-    """
-    SS_res = np.nansum((y_true - y_pred)**2, axis=0)
-    SS_tot = np.nansum((y_true - y_true.mean(axis=0))**2, axis=0)
-    return 1 - (SS_res / SS_tot)
+    "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
+
+    mask = np.logical_and(np.logical_not(np.isnan(y_true)),
+                          np.logical_not(np.isnan(y_pred)))
+    c = np.corrcoef(y_true[mask].T, y_pred[mask].T) ** 2
+    return np.diag(c[-int(c.shape[0]/2):,:int(c.shape[1]/2)])
 
 
 class LSTM(torch.nn.Module):
