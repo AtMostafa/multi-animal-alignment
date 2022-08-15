@@ -1,7 +1,6 @@
 import logging
 import numpy as np
 import torch
-from tqdm import tqdm
 
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 
@@ -75,7 +74,7 @@ class LSTMDecoder():
         #shuffle trials
         shuffled_ind = rng.permutation(x_train.shape[0])
 
-        for _ in tqdm(range(epochs)):
+        for _ in range(epochs):
             for ind in shuffled_ind:
                 self.optimizer.zero_grad()
 
