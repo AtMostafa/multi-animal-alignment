@@ -79,8 +79,8 @@ class LSTMDecoder():
             for ind in shuffled_ind:
                 self.optimizer.zero_grad()
 
-                inputs = x_train[ind, ...]
-                labels = y_train[ind, ...]
+                inputs = torch.from_numpy(x_train[ind, ...]).type(self.dtype)
+                labels = torch.from_numpy(y_train[ind, ...]).type(self.dtype)
                 mask = torch.logical_not(torch.isnan(labels[:,0]))
                 inputs = inputs[mask,:]
                 labels = labels[mask,:]
