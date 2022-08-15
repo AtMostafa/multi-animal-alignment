@@ -73,16 +73,14 @@ class LSTMDecoder():
         self.model.train()
 
         #shuffle trials
-        ind = rng.permutation(x_train.shape[0])
-        x_train_t = torch.from_numpy(x_train[ind]).type(self.dtype)
-        y_train_t = torch.from_numpy(y_train[ind]).type(self.dtype)
+        shuffled_ind = rng.permutation(x_train.shape[0])
 
         for _ in tqdm(range(epochs)):
-            for j in range(x_train.shape[0]):
+            for ind in shuffled_ind:
                 self.optimizer.zero_grad()
 
-                inputs = x_train_t[j, ...]
-                labels = y_train_t[j, ...]
+                inputs = x_train[ind, ...]
+                labels = y_train[ind, ...]
                 mask = torch.logical_not(torch.isnan(labels[:,0]))
                 inputs = inputs[mask,:]
                 labels = labels[mask,:]
