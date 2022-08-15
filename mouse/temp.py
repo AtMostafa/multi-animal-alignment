@@ -85,6 +85,8 @@ def plot_m1_decoding(AllDFs):
     
     #=========================
     within_score = {}
+    aligned_score = {}
+    unaligned_score = {}
     for i, df1 in enumerate(AllDFs):
         animal1 = df1.mouse[0]
 
@@ -114,16 +116,13 @@ def plot_m1_decoding(AllDFs):
         fold_score = np.median(fold_score)
         within_score[df1.file[0]] = fold_score
 
-        aligned_score = {}
-        unaligned_score = {}
+
+        aligned_score[df1.file[0]] = {}
+        unaligned_score[df1.file[0]] = {}
         for j, df2 in enumerate(AllDFs):
             if j < i: continue
             animal2 = df2.mouse[0]
             if animal1 == animal2: continue
-            aligned_score[df1.mouse[0]][df2.mouse[0]] = 0
-            aligned_score[df2.mouse[0]][df1.mouse[0]] = 0
-            unaligned_score[df1.mouse[0]][df2.mouse[0]] = 0
-            unaligned_score[df2.mouse[0]][df1.mouse[0]] = 0
             
             #================================
             # Unaligned
@@ -154,16 +153,14 @@ def plot_m1_decoding(AllDFs):
             lstm_model = lstm.LSTMDecoder(input_dims=U.shape[-1], output_dims=3)
             lstm_model.fit(x_train=U, y_train=AllVel1)
             lstm_model.predict(V, AllVel2)
-            aligned_score[df1.mouse[0]][df2.mouse[0]] = lstm_model.score
-            aligned_score[df2.mouse[0]][df1.mouse[0]] = lstm_model.score
+            aligned_score[df1.file[0]][df2.file[0]] = lstm_model.score
 
             #================================
             # Unaligned
             lstm_model = lstm.LSTMDecoder(input_dims=X1.shape[-1], output_dims=3)
             lstm_model.fit(x_train=X1, y_train=AllVel1)
             lstm_model.predict(X2, AllVel2)
-            unaligned_score[df1.mouse[0]][df2.mouse[0]] = lstm_model.score
-            unaligned_score[df2.mouse[0]][df1.mouse[0]] = lstm_model.score
+            unaligned_score[df1.file[0]][df2.file[0]] = lstm_model.score
 
 
     return within_score, aligned_score, unaligned_score
@@ -180,7 +177,7 @@ allDFs_M1, _ = get_full_mouse_data()
 
 
 within_score, aligned_score, unaligned_score = plot_m1_decoding(allDFs_M1)
-plt.plot(within_score)
+plt.plot(within_score.values())
 plt.savefig('dummy_name.png')
 
 
