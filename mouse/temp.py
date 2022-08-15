@@ -83,10 +83,13 @@ def get_full_mouse_data():
 def plot_m1_decoding(AllDFs):
     defs = mouse_defs
     
-    reg_scores = []
-    for i, df in enumerate(tqdm(AllDFs)):
-        AllData, AllVel = defs.get_data_array_and_vel([df], defs.exec_epoch_decode, area=defs.areas[0],
-                                                      n_components=10)
+    #=========================
+    within_score = {}
+    for i, df1 in enumerate(AllDFs):
+        animal1 = df1.mouse[0]
+
+        AllData, AllVel = defs.get_data_array_and_vel([df1], defs.exec_epoch_decode, area=defs.areas[0],
+                                                    n_components=10)
         # adding history
         AllData = dt.add_history_to_data_array(AllData, defs.MAX_HISTORY)
         AllData = AllData[...,defs.MAX_HISTORY:,:]
@@ -94,11 +97,9 @@ def plot_m1_decoding(AllDFs):
         *_,n_time,n_comp = AllData.shape
         AllData1 = AllData[0,...]
         AllVel1 = AllVel[0,...]
-
         # resizing
         X1 = AllData1.reshape((-1, n_time, n_comp))
         AllVel1 = AllVel1.reshape((-1,n_time,3))
-        print(f'i={i}; n-unit={df.M1_rates[0].shape}; df={df.file[0]}')
 
         fold_score =[]
         kf = KFold(n_splits=10)
@@ -110,116 +111,63 @@ def plot_m1_decoding(AllDFs):
             lstm_model.fit(x_train=x_train, y_train=y_train, epochs = 10)
             lstm_model.predict(x_test, y_test)
             fold_score.append(lstm_model.score)
-        fold_score = np.array(fold_score)
-        reg_scores.append(np.median(fold_score, axis=0))
+        fold_score = np.median(fold_score)
+        within_score[df1.file[0]] = fold_score
 
-    pop_score_day = np.array(reg_scores)
+        aligned_score = {}
+        unaligned_score = {}
+        for j, df2 in enumerate(AllDFs):
+            if j < i: continue
+            animal2 = df2.mouse[0]
+            if animal1 == animal2: continue
+            aligned_score[df1.mouse[0]][df2.mouse[0]] = 0
+            aligned_score[df2.mouse[0]][df1.mouse[0]] = 0
+            unaligned_score[df1.mouse[0]][df2.mouse[0]] = 0
+            unaligned_score[df2.mouse[0]][df1.mouse[0]] = 0
+            
+            #================================
+            # Unaligned
+            AllData, AllVel = defs.get_data_array_and_vel([df1, df2], defs.exec_epoch_decode,
+                                                          area=defs.areas[0], n_components=defs.n_components)
 
+            # adding history
+            AllData = dt.add_history_to_data_array(AllData, defs.MAX_HISTORY)
+            AllData = AllData[...,defs.MAX_HISTORY:,:]
+            AllVel = AllVel[...,defs.MAX_HISTORY:,:]
+            AllData1 = AllData[0,...]
+            AllData2 = AllData[1,...]
+            AllVel1 = AllVel[0,...]
+            AllVel2 = AllVel[1,...]
+            # resizing
+            _,n_trial,n_time,n_comp = AllData1.shape
+            X1 = AllData1.reshape((-1,n_comp))
+            X2 = AllData2.reshape((-1,n_comp))
+            AllVel1 = AllVel1.reshape((-1,n_time,3))
+            AllVel2 = AllVel2.reshape((-1,n_time,3))
 
+            *_,U,V = dt.canoncorr(X1, X2, fullReturn=True)
+            U = U.reshape((-1,n_time,n_comp))
+            V = V.reshape((-1,n_time,n_comp))
+            X1 = X1.reshape((-1,n_time,n_comp))
+            X2 = X2.reshape((-1,n_time,n_comp))
 
-    #=========================
-    # pairIndex_across = []
-    # for i, df1 in enumerate(AllDFs):
-    #     animal1 = df1.mouse[0]
-    #     pairIndex_across.append((i,[]))
-    #     for j, df2 in enumerate(AllDFs):
-    #         if j<i: continue
-    #         animal2 = df2.mouse[0]
-    #         if animal1 == animal2: continue
-    #         pairIndex_across[-1][1].append(j)
-    # pairIndex_across = [(i,j) for i,jList in pairIndex_across for j in jList]
-    
-    reg_scores_across = []
-    # for _, (id1, testId) in enumerate(pairIndex_across):
-    #     AllData, AllVel = defs.get_data_array_and_vel([AllDFs[id1],AllDFs[testId]], defs.exec_epoch_decode,
-    #                                                   area=defs.areas[0], n_components=defs.n_components)
+            lstm_model = lstm.LSTMDecoder(input_dims=U.shape[-1], output_dims=3)
+            lstm_model.fit(x_train=U, y_train=AllVel1)
+            lstm_model.predict(V, AllVel2)
+            aligned_score[df1.mouse[0]][df2.mouse[0]] = lstm_model.score
+            aligned_score[df2.mouse[0]][df1.mouse[0]] = lstm_model.score
 
-    #     # adding history
-    #     AllData = dt.add_history_to_data_array(AllData, defs.MAX_HISTORY)
-    #     AllData = AllData[...,defs.MAX_HISTORY:,:]
-    #     AllVel = AllVel[...,defs.MAX_HISTORY:,:]
-
-
-    #     AllData1 = AllData[0,...]
-    #     AllData2 = AllData[1,...]
-    #     AllVel1 = AllVel[0,...]
-    #     AllVel2 = AllVel[1,...]
-        
-    #     # resizing
-    #     _,n_trial,n_time,n_comp = np.min(np.array((AllData1.shape,AllData2.shape)),axis=0)
-    #     X1 = AllData1.reshape((-1,n_comp))
-    #     X2 = AllData2.reshape((-1,n_comp))
-    #     AllVel1 = AllVel1.reshape((-1,n_time,3))
-    #     AllVel2 = AllVel2.reshape((-1,n_time,3))
-
-    #     *_,U,V = dt.canoncorr(X1, X2, fullReturn=True)
-    #     U = U.reshape((-1,n_time,n_comp))
-    #     V = V.reshape((-1,n_time,n_comp))
-
-    #     lstm_model = lstm.LSTMDecoder(input_dims=U.shape[-1], output_dims=3)
-    #     lstm_model.fit(x_train=U, y_train=AllVel1)
-    #     lstm_model.predict(V, AllVel2)
-    #     reg_scores_across.extend(lstm_model.score.tolist())
-
-    pop_score_across = np.array(reg_scores_across)
-
-    #================================
-    reg_latent_scores = []
-    # for id1, testId in pairIndex_across:
-    #     AllData, AllVel = defs.get_data_array_and_vel([AllDFs[id1],AllDFs[testId]], defs.exec_epoch_decode,
-    #                                                   area=defs.areas[0], n_components=defs.n_components)
-
-    #     # adding history
-    #     AllData = dt.add_history_to_data_array(AllData, defs.MAX_HISTORY)
-    #     AllData = AllData[...,defs.MAX_HISTORY:,:]
-    #     AllVel = AllVel[...,defs.MAX_HISTORY:,:]
-
-    #     AllData1 = AllData[0,...]
-    #     AllData2 = AllData[1,...]
-    #     AllVel1 = AllVel[0,...]
-    #     AllVel2 = AllVel[1,...]
-    #     # resizing
-    #     _,n_trial,n_time,n_comp = np.min(np.array((AllData1.shape, AllData2.shape)),axis=0)
-    #     X1 = AllData1.reshape((-1,n_time,n_comp))
-    #     X2 = AllData2.reshape((-1,n_time,n_comp))
-    #     AllVel2 = AllVel2.reshape((-1,n_time,3))
-    #     AllVel1 = AllVel1.reshape((-1,n_time,3))
-    #     crs_val_factor = int(0.9 * X1.shape[0])
-
-    #     # train the decoder
-    #     U,V = X1, X2
-    #     lstm_model = lstm.LSTMDecoder(input_dims=U.shape[-1], output_dims=3)
-    #     lstm_model.fit(x_train=U[:crs_val_factor,...], y_train=AllVel1[:crs_val_factor,...])
-    #     lstm_model.predict(V[:crs_val_factor,...], AllVel2[:crs_val_factor,...])
-    #     reg_latent_scores.extend(lstm_model.score.tolist())
-    pop_latent_score = np.array(reg_latent_scores)
+            #================================
+            # Unaligned
+            lstm_model = lstm.LSTMDecoder(input_dims=X1.shape[-1], output_dims=3)
+            lstm_model.fit(x_train=X1, y_train=AllVel1)
+            lstm_model.predict(X2, AllVel2)
+            unaligned_score[df1.mouse[0]][df2.mouse[0]] = lstm_model.score
+            unaligned_score[df2.mouse[0]][df1.mouse[0]] = lstm_model.score
 
 
-    return pop_score_across, pop_latent_score, pop_score_day
+    return within_score, aligned_score, unaligned_score
 
-
-def plot_traj(ax, df):
-    df = pyal.restrict_to_interval(df, epoch_fun=defs.exec_epoch)
-    
-    for i,traj in enumerate(df.hTrjB):
-        if df.target_id[i] in (0,):
-            color = params.colors.RightTrial
-            label = 'right'
-        elif df.target_id[i] in (1,):
-            color = params.colors.LeftTrial
-            label = 'left'
-        
-        ax.plot(traj[:,0], -traj[:,1], color=color, lw=.4, label=label)
-        ax.plot(traj[0,0], -traj[0,1], color=color, marker='o', ms=2)
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=3, nbins=3))
-        ax.yaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=3, nbins=3))
-        ax.set_xticklabels(np.int16(ax.get_xticks()-ax.get_xticks().min()))
-        ax.set_yticklabels(np.int16(ax.get_yticks()-ax.get_yticks().min()))
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.set_xlabel('$X (mm)$')
-        ax.set_ylabel('$Y (mm)$')
-        ax.set_title(df.mouse[0])
 
 
 plt.close('all')
@@ -229,13 +177,6 @@ ax = fig.add_subplot()
 
 
 allDFs_M1, _ = get_full_mouse_data()
-
-
-# plt.close('all')
-# fig=plt.figure(dpi=100)
-# ax = fig.add_subplot()
-# plot_traj(ax, allDFs_M1[0])
-# plt.savefig('dummy_name2.png')
 
 
 aligned, unaligned, within = plot_m1_decoding(allDFs_M1)
