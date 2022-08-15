@@ -179,9 +179,8 @@ ax = fig.add_subplot()
 allDFs_M1, _ = get_full_mouse_data()
 
 
-aligned, unaligned, within = plot_m1_decoding(allDFs_M1)
-plt.plot(within, label=['x','y','z'])
-plt.legend()
+within_score, aligned_score, unaligned_score = plot_m1_decoding(allDFs_M1)
+plt.plot(within_score)
 plt.savefig('dummy_name.png')
 
 
