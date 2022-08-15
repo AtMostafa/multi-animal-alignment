@@ -162,7 +162,6 @@ def plot_m1_decoding(AllDFs):
             lstm_model.predict(X2, AllVel2)
             unaligned_score[df1.file[0]][df2.file[0]] = lstm_model.score
 
-
     return within_score, aligned_score, unaligned_score
 
 
