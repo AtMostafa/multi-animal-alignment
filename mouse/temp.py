@@ -86,7 +86,7 @@ def plot_m1_decoding(AllDFs):
     reg_scores = []
     for i, df in enumerate(AllDFs):
         AllData, AllVel = defs.get_data_array_and_vel([df], defs.exec_epoch_decode, area=defs.areas[0],
-                                                      n_components=15)
+                                                      n_components=10)
         # adding history
         AllData = dt.add_history_to_data_array(AllData, defs.MAX_HISTORY)
         AllData = AllData[...,defs.MAX_HISTORY:,:]
@@ -114,6 +114,7 @@ def plot_m1_decoding(AllDFs):
         reg_scores.append(np.median(fold_score, axis=0))
 
     pop_score_day = np.array(reg_scores)
+
 
 
     #=========================
@@ -197,6 +198,30 @@ def plot_m1_decoding(AllDFs):
     return pop_score_across, pop_latent_score, pop_score_day
 
 
+def plot_traj(ax, df):
+    df = pyal.restrict_to_interval(df, epoch_fun=defs.exec_epoch)
+    
+    for i,traj in enumerate(df.hTrjB):
+        if df.target_id[i] in (0,):
+            color = params.colors.RightTrial
+            label = 'right'
+        elif df.target_id[i] in (1,):
+            color = params.colors.LeftTrial
+            label = 'left'
+        
+        ax.plot(traj[:,0], -traj[:,1], color=color, lw=.4, label=label)
+        ax.plot(traj[0,0], -traj[0,1], color=color, marker='o', ms=2)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=3, nbins=3))
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True, min_n_ticks=3, nbins=3))
+        ax.set_xticklabels(np.int16(ax.get_xticks()-ax.get_xticks().min()))
+        ax.set_yticklabels(np.int16(ax.get_yticks()-ax.get_yticks().min()))
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.set_xlabel('$X (mm)$')
+        ax.set_ylabel('$Y (mm)$')
+        ax.set_title(df.mouse[0])
+
+
 plt.close('all')
 set_rc()
 fig=plt.figure(dpi=100)
@@ -204,10 +229,16 @@ ax = fig.add_subplot()
 
 
 allDFs_M1, _ = get_full_mouse_data()
-     
+
+
+# plt.close('all')
+# fig=plt.figure(dpi=100)
+# ax = fig.add_subplot()
+# plot_traj(ax, allDFs_M1[0])
+# plt.savefig('dummy_name2.png')
+
+
 aligned, unaligned, within = plot_m1_decoding(allDFs_M1)
-
-
 plt.plot(within, label=['x','y','z'])
 plt.legend()
 plt.savefig('dummy_name.png')
