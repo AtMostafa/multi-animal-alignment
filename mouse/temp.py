@@ -84,7 +84,7 @@ def plot_m1_decoding(AllDFs):
     defs = mouse_defs
     
     reg_scores = []
-    for i, df in enumerate(AllDFs):
+    for i, df in enumerate(tqdm(AllDFs)):
         AllData, AllVel = defs.get_data_array_and_vel([df], defs.exec_epoch_decode, area=defs.areas[0],
                                                       n_components=10)
         # adding history
