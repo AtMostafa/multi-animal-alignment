@@ -111,7 +111,7 @@ class colors:
     MouseM1 = 'tab:blue'
     MouseStr = 'tab:orange'
     MainCC = 'r'
-    LowerCC = 'gray'
+    LowerCC = 'k'
     UpperCC = 'cornflowerblue'
     Sim1CC ='cornflowerblue'
     Sim2CC = 'palevioletred'
