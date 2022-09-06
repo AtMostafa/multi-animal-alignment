@@ -17,6 +17,7 @@ MedFig = (4.3,4.3)
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 n_iter = 100
 Behav_corr_TH = 0.5
+annotate_stats = False
 
 
 def set_rc_params(dictArg:dict ={}):
