@@ -82,6 +82,8 @@ class LSTMDecoder():
                 mask = torch.logical_not(torch.isnan(labels[:,0]))
                 inputs = inputs[mask,:]
                 labels = labels[mask,:]
+                if labels.shape[0] == 0: #if there are no labels
+                    continue
 
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, labels)

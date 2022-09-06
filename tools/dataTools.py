@@ -582,3 +582,15 @@ def canoncorr_torch(X:torch.Tensor, Y: torch.Tensor) -> torch.Tensor:
     r = torch.linalg.svdvals(Q1.T @ Q2) 
 
     return r
+
+def get_signif_annot(value):
+    assert(value >=0)
+
+    if value >0.05:
+        return 'n.s.'
+    elif value > 0.01:
+        return '*'
+    elif value > 0.001:
+        return '**'
+    else:
+        return '***'
