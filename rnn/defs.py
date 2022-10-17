@@ -14,13 +14,13 @@ PRINT_EPOCH = 5
 #DATA
 MAX_Y_POS = 7
 MOVEMENT_SPEED_THRESHOLD = 6.0
-LOSS_THRESHOLD = 0.20
+LOSS_THRESHOLD = 0.2
 MAX_TRAINING_TRIALS = 500
 MIN_TRAINING_TRIALS = 50
 
 #RANDOM SEEDS
 SEEDS1 = range(1000020,1000030)
-SEEDS2 = range(1000050,1000060)
+SEEDS2 = range(1000030,1000040)
 
 #TRAINING
 BATCH_SIZE = 64
@@ -31,7 +31,7 @@ pca_dims = 10
 BIN_SIZE = .01  # sec
 n_components = 10 
 n_targets = 8
-seed_idx_ex = 0
+seed_idx_ex = 4
 trial_ex = 1
 
 WINDOW_prep = (-.40, .05)  # sec

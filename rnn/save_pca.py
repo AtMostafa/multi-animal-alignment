@@ -13,8 +13,8 @@ import sys
 from params import rnn_defs
 
 # %%
-sim_number = int(sys.argv[1])
-seed = rnn_defs.SEEDS1[0]
+seed = int(sys.argv[1])
+sim_number = int(sys.argv[2])
 rnn_epoch = rnn_defs.exec_epoch
 
 # get and process testing data and output from previously trained network

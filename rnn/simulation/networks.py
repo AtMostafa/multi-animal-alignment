@@ -28,7 +28,7 @@ class RNN(nn.Module):
         self.rnn_l1_hh_mask.requires_grad = False
 
         #freeze input bias
-        self.rnn_l1.bias_hh_l0.requires_grad = False
+        self.rnn_l1.bias_ih_l0.requires_grad = False
 
         #output layer
         self.output = nn.Linear(n_neurons, n_outputs)
@@ -106,11 +106,13 @@ class RNN(nn.Module):
             nx1 = self.noise_amp*torch.randn(1,batch_size, self.n_neurons).type(self.dtype)
             x1 = x1 + self.alpha*(-x1 + r1 @ (self.rnn_l1_hh_mask * self.rnn_l1.weight_hh_l0.T) 
                                       + xin @ self.rnn_l1.weight_ih_l0.T
+                                      + self.rnn_l1.bias_hh_l0
                                       + nx1
                                  )                                                    
         else:
             x1 = x1 + self.alpha*(-x1 + r1 @ (self.rnn_l1_hh_mask * self.rnn_l1.weight_hh_l0.T) 
                                       + xin @ self.rnn_l1.weight_ih_l0.T
+                                      + self.rnn_l1.bias_hh_l0
                                  )
 
         r1 = x1.tanh() #tanh activation
