@@ -152,7 +152,7 @@ class Runner:
 
         ## input weights
         state_dict['rnn_l1.weight_ih_l0'] = torch.FloatTensor((np.random.rand(n1, self.task_params.input_dim)-0.5)*2.*self._config.gin) 
-        state_dict['rnn_l1.bias_hh_l0'] = torch.FloatTensor(np.zeros(self.task_params.input_dim)) 
+        state_dict['rnn_l1.bias_ih_l0'] = torch.FloatTensor(np.zeros(n1)) 
 
         ## recurrent weights
         state_dict['rnn_l1.weight_hh_l0'] = torch.FloatTensor(self._config.g1 / np.sqrt(n1) * np.random.randn(n1,n1)) 
