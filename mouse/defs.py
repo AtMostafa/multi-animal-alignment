@@ -37,12 +37,12 @@ exec_epoch_decode = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_exec[0]/BIN_SIZE) - MAX_HISTORY,
                                      rel_end=int(WINDOW_exec[1]/BIN_SIZE)
                                     )
+
 # Windows for analyses aligned on the Pull phase
-BIN_SIZE_PULL = .01  # sec
-WINDOW_exec_pull = (-.05, .4)  # sec
+WINDOW_exec_pull = (-.05, .3)  # sec
 exec_epoch_pull = pyal.generate_epoch_fun(start_point_name='idx_pull_on',
-                                         rel_start=int(WINDOW_exec_pull[0]/BIN_SIZE_PULL),
-                                         rel_end=int(WINDOW_exec_pull[1]/BIN_SIZE_PULL)
+                                         rel_start=int(WINDOW_exec_pull[0]/BIN_SIZE),
+                                         rel_end=int(WINDOW_exec_pull[1]/BIN_SIZE)
                                          )
 
 def custom_r2_func(y_true, y_pred):
@@ -190,9 +190,9 @@ def prep_pull_mouse (df):
     df_ = pyal.select_trials(df_, df_.idx_pull_on < df_.idx_pull_off)
     # !!! discard outlier behaviour---tricky stuff !!!
         # reach duration < 500ms
-    # df_ = pyal.select_trials(df_, df_.idx_pull_on - df_.idx_movement_on < 50)
+    df_ = pyal.select_trials(df_, df_.idx_pull_on - df_.idx_movement_on < 50)
         # pull duration < 450ms
-    # df_ = pyal.select_trials(df_, df_.idx_pull_off - df_.idx_pull_on < 45)
+    df_ = pyal.select_trials(df_, df_.idx_pull_off - df_.idx_pull_on < 45)
 
     try:
         noLaserIndex = [i for i,laserData in enumerate(df_.spkTimeBlaserI) if not np.any(laserData)]
@@ -201,11 +201,11 @@ def prep_pull_mouse (df):
         # due to absence of this field in no-laser sessions
         pass
 
-    # df_ = pyal.combine_time_bins(df_, int(BIN_SIZE/.01))
+    df_ = pyal.combine_time_bins(df_, int(BIN_SIZE/.01))
     for signal in new_fields:
         df_ = pyal.sqrt_transform_signal(df_, signal)
 
-    df_= pyal.add_firing_rates(df_, 'smooth', std=0.03)
+    df_= pyal.add_firing_rates(df_, 'smooth', std=0.05)
 
     return df_
 
