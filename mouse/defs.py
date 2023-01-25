@@ -149,8 +149,8 @@ def prep_pull_mouse (df):
     df_['badIndex'] = [max(trialT.shape)>n_bins or
                        max(trialV.shape)>n_bins or
                        max(trialD.shape)>n_bins or
-                       max(trialT.shape) < 2 or 
-                       max(trialV.shape) < 2 or 
+                       max(trialT.shape) < 2 or
+                       max(trialV.shape) < 2 or
                        np.isnan(trialT).sum() > 5 for trialT,trialV,trialD in zip(df_.hTrjB,df_.hVelB,df_.hDistFromInitPos)]
     df_= pyal.select_trials(df_, df_.badIndex == False)
     df_.drop('badIndex', axis=1, inplace=True)
@@ -172,8 +172,8 @@ def prep_pull_mouse (df):
     df_.index = np.arange(df_.shape[0])
     # add target_id
     rem = np.remainder(df_['blNumber'].to_numpy(), 4)
-    rem[np.logical_or(rem==3 , rem ==0)] = 0
-    rem[np.logical_or(rem==1 , rem==2)] = 1
+    # rem[np.logical_or(rem==3 , rem ==0)] = 0
+    # rem[np.logical_or(rem==1 , rem==2)] = 1
     df_['target_id'] = rem
 
     for signal in new_fields:
@@ -183,9 +183,9 @@ def prep_pull_mouse (df):
     df_ = pyal.select_trials(df_, df_.idx_pull_on < df_.idx_pull_off)
     # !!! discard outlier behaviour---tricky stuff !!!
         # reach duration < 500ms
-    df_ = pyal.select_trials(df_, df_.idx_pull_on - df_.idx_movement_on < 50)
+    # df_ = pyal.select_trials(df_, df_.idx_pull_on - df_.idx_movement_on < 50)
         # pull duration < 450ms
-    df_ = pyal.select_trials(df_, df_.idx_pull_off - df_.idx_pull_on < 45)
+    # df_ = pyal.select_trials(df_, df_.idx_pull_off - df_.idx_pull_on < 45)
 
     try:
         noLaserIndex = [i for i,laserData in enumerate(df_.spkTimeBlaserI) if not np.any(laserData)]
@@ -194,11 +194,11 @@ def prep_pull_mouse (df):
         # due to absence of this field in no-laser sessions
         pass
 
-    df_ = pyal.combine_time_bins(df_, int(BIN_SIZE/.01))
+    # df_ = pyal.combine_time_bins(df_, int(BIN_SIZE/.01))
     for signal in new_fields:
         df_ = pyal.sqrt_transform_signal(df_, signal)
 
-    df_= pyal.add_firing_rates(df_, 'smooth', std=0.05)
+    df_= pyal.add_firing_rates(df_, 'smooth', std=0.03)
 
     return df_
 
