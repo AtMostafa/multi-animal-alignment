@@ -6,6 +6,7 @@ function[surrTensor] = computeTME(dataTensor,surrogate_type)
 % Modification to incorporate surrogate_type = "surrogate-N" 
 % by Cecilia Gallego-Carracedo 2020
 
+% dataTensor: time x neuron x condition
 rng('shuffle', 'twister') % randomize the seed
 
 
