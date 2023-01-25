@@ -39,9 +39,10 @@ exec_epoch_decode = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                     )
 # Windows for analyses aligned on the Pull phase
 BIN_SIZE_PULL = .01  # sec
+WINDOW_exec_pull = (-.05, .4)  # sec
 exec_epoch_pull = pyal.generate_epoch_fun(start_point_name='idx_pull_on',
-                                         rel_start=int(WINDOW_exec[0]/BIN_SIZE_PULL),
-                                         rel_end=int(WINDOW_exec[1]/BIN_SIZE_PULL)
+                                         rel_start=int(WINDOW_exec_pull[0]/BIN_SIZE_PULL),
+                                         rel_end=int(WINDOW_exec_pull[1]/BIN_SIZE_PULL)
                                          )
 
 def custom_r2_func(y_true, y_pred):
