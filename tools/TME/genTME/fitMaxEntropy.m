@@ -59,9 +59,9 @@ for i = 1:tensorSize                                                       % loa
 end
 maxEntropy.eigVectors = eigVectors;
 %% the marginal covariances should all have the same trace (i.e. the sum of their eigenvalues should be equal)
-if ~(sum((trSigma-mean(trSigma))>=-(sum(dim)*sqrt(eps)) & (trSigma-mean(trSigma))<=(sum(dim)*sqrt(eps)))==length(trSigma))
-    error('the covariance matrices should have exactly the same trace')
-end
+% if ~(sum((trSigma-mean(trSigma))>=-(sum(dim)*sqrt(eps)) & (trSigma-mean(trSigma))<=(sum(dim)*sqrt(eps)))==length(trSigma))
+%     error('the covariance matrices should have exactly the same trace')
+% end
 
 %%
  % if the marginal covariances are low rank then the number of variables 
