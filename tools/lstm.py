@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 import torch
+from sklearn.metrics import r2_score
 
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 
@@ -9,9 +10,9 @@ def custom_r2_func(y_true, y_pred):
 
     mask = np.logical_and(np.logical_not(np.isnan(y_true)),
                           np.logical_not(np.isnan(y_pred)))
-    c = np.corrcoef(y_true[mask].T, y_pred[mask].T) ** 2
-    return np.diag(c[-int(c.shape[0]/2):,:int(c.shape[1]/2)])
-
+    # c = np.corrcoef(y_true[mask].T, y_pred[mask].T) ** 2
+    # return np.diag(c[-int(c.shape[0]/2):,:int(c.shape[1]/2)])
+    return r2_score(y_true[mask], y_pred[mask])
 
 class LSTM(torch.nn.Module):
     "The LSTM network"
@@ -128,4 +129,4 @@ if __name__ == "__main__":
     model = LSTMDecoder(40, 3)
     model.fit(x,y)
     pr, lab = model.predict(x,y)
-    print()
+    print(model.score)
