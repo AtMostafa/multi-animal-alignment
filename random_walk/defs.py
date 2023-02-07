@@ -9,6 +9,8 @@ from sklearn.model_selection import cross_val_score
 from sklearn.metrics import make_scorer, r2_score
 import pyaldata as pyal
 import math
+from typing import Callable
+
 
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 
@@ -17,10 +19,13 @@ rng = np.random.default_rng(np.random.SeedSequence(12345))
 BIN_SIZE = .03  # sec
 # WINDOW_prep = (-.4, .05)  # sec
 WINDOW_exec = (0.0, .35)  # sec
-# n_components = 10  # min between M1 and PMd
-# areas = ('M1', 'PMd', 'MCx')
-n_target_groups = 8
-subset_radius = 2.5
+n_components = 10  # min between M1 and PMd
+areas = ('M1', 'PMd', 'MCx')
+n_angle_groups = 4
+subset_radius = 2
+target_grid = (3,3)
+n_centers = target_grid[0]*target_grid[1]
+target_groups = np.array([str(i)+ '_'+ str(j) for i in range(n_centers) for j in range(n_angle_groups)])
 
 # prep_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
 #                                      rel_start=int(WINDOW_prep[0]/BIN_SIZE),
@@ -103,18 +108,112 @@ def get_reaches_df(df):
     mean_offset = np.mean([pos[0] - start_center for start_center,pos in zip(df_second_reaches.start_center, df_second_reaches.pos)],axis = 0) 
     df_reaches['pos'] = [x - mean_offset for x in df_reaches['pos']] 
 
-    #center targets and pos at origin
-    df_reaches['dist_start_center'] = [np.linalg.norm(x[0]) for x in df_reaches.pos]
-    df_reaches['pos_centered'] = [x - x[0] for x in df_reaches.pos]
-    df_reaches['target_centered'] = [y - x[0] for x,y in zip(df_reaches.pos,df_reaches.target_center)]
-
-    # get target angle and group
-    df_reaches['target_angle'] = [math.degrees(math.atan2(x[1],x[0])) for x in df_reaches.target_centered]
-    df_reaches['target_angle'] = [360+x if x < 0 else x for x in df_reaches.target_angle]
-    df_reaches['target_group'] = [math.floor(x/(360/n_target_groups)) for x in df_reaches.target_angle]
-
+    #separate into target groups
+    df_reaches = set_target_groups(df_reaches)
     return df_reaches
     
+def set_target_groups(df):
+    from scipy.spatial.distance import cdist
+
+    #set centers for reaches to start from
+    grid = target_grid
+    xlim = (-10,10)
+    ylim = (-10,10)
+
+    x_centers = np.linspace(xlim[0], xlim[1], grid[0]+2)[1:-1]
+    y_centers = np.linspace(ylim[0], ylim[1], grid[1]+2)[1:-1]
+
+    centers = []
+    for x in x_centers:
+        for y in y_centers:
+            centers.append([x,y])
+    centers = np.array(centers)
+
+    #center targets and pos at origin
+    first_pos = [x[0] for x in df.pos]
+    dist_from_centers = cdist(centers,first_pos)
+    
+    df['center_dist'] = np.min(dist_from_centers,axis = 0)
+    df['center_id'] = np.argmin(dist_from_centers,axis = 0)
+    df['center']= [centers[x] for x in df.center_id]
+    df['pos_centered'] = [pos - (pos[0]-center) for pos, center in zip(df.pos, df.center)]
+    df['target_centered'] = [target - (pos[0]-center) for target,pos,center in zip(df.target_center, df.pos, df.center)]
+
+    # get target angle and group
+    df['target_angle'] = [math.degrees(math.atan2(target[1]-center[1],target[0]-center[0])) for target,center in zip(df.target_center, df.center)]
+    df['target_angle'] = [360+x if x < 0 else x for x in df.target_angle]
+    df['angle_group'] = [math.floor(x/(360/n_angle_groups)) for x in df.target_angle]
+    df['target_group'] = [str(center)+'_'+str(angle) for center,angle in zip(df.center_id, df.angle_group)]
+
+    return df
+
+def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: str ='M1', model: Callable =None, n_components:int = 10) -> np.ndarray:
+    """
+    Applies the `model` to the `data_list` and return a data matrix of the shape: sessions x targets x trials x time x modes
+    with the minimum number of trials and timepoints shared across all the datasets/targets.
+    
+    Parameters
+    ----------
+    `data_list`: list of pd.dataFrame datasets from pyalData (could also be a single dataset)
+    `epoch`: an epoch function of the type `pyal.generate_epoch_fun()`
+    `area`: area, either: 'M1', or 'S1', or 'PMd', ...
+    `model`: a model that implements `.fit()`, `.transform()` and `n_components`. By default: `PCA(10)`. If it's an integer: `PCA(integer)`.
+    `n_components`: use `model`, this is for backward compatibility
+    
+    Returns
+    -------
+    `AllData`: np.ndarray
+
+    Signature
+    -------
+    AllData = get_data_array(data_list, execution_epoch, area='M1', model=10)
+    all_data = np.reshape(AllData, (-1,10))
+    """
+    if isinstance(data_list, pd.DataFrame):
+        data_list = [data_list]
+    if model is None:
+        model = PCA(n_components=n_components, svd_solver='full')
+    elif isinstance(model, int):
+        model = PCA(n_components=model, svd_solver='full')
+    
+    field = f'{area}_rates'
+    n_shared_trial = np.inf
+    target_ids = np.unique(data_list[0].target_id)
+    for df in data_list:
+        for target in target_ids:
+            df_ = pyal.select_trials(df, df.target_id== target)
+            n_shared_trial = np.min((df_.shape[0], n_shared_trial))
+
+    n_shared_trial = int(n_shared_trial)
+
+    # finding the number of timepoints
+    if epoch is not None:
+        df_ = pyal.restrict_to_interval(data_list[0],epoch_fun=epoch)
+    n_timepoints = int(df_[field][0].shape[0])
+
+    # pre-allocating the data matrix
+    AllData = np.empty((len(data_list), len(target_ids), n_shared_trial, n_timepoints, model.n_components))
+
+    rng = np.random.default_rng(12345)
+    for session, df in enumerate(data_list):
+        df_ = pyal.restrict_to_interval(df, epoch_fun=epoch) if epoch is not None else df
+        rates = np.concatenate(df_[field].values, axis=0)
+        rates_model = model.fit(rates)
+        df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
+
+        for targetIdx,target in enumerate(target_ids):
+            df__ = pyal.select_trials(df_, df_.target_id==target)
+            all_id = df__.reach_id.to_numpy()
+            # to guarantee shuffled ids
+            while ((all_id_sh := rng.permutation(all_id)) == all_id).all():
+                continue
+            all_id = all_id_sh
+            # select the right number of trials to each target
+            df__ = pyal.select_trials(df__, lambda trial: trial.reach_id in all_id[:n_shared_trial])
+            for trial, trial_rates in enumerate(df__._pca):
+                AllData[session,targetIdx,trial, :, :] = trial_rates
+
+    return AllData
 
 # def custom_r2_func(y_true, y_pred):
 #     "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
@@ -182,49 +281,49 @@ def get_reaches_df(df):
 #     l = min(a.shape[0],b.shape[0])
 #     return a[:l],b[:l]
 
-# def _get_data_array(data_list: list[pd.DataFrame], epoch_L: int =None , area: str ='M1', model=None) -> np.ndarray:
-#     "Similat to `get_data_array` only returns an apoch of length `epoch_L` randomly chosen along each trial"
-#     if isinstance(data_list, pd.DataFrame):
-#         data_list = [data_list]
-#     if isinstance(model, int):
-#         model = PCA(n_components=model, svd_solver='full')
+def _get_data_array(data_list: list[pd.DataFrame], epoch_L: int =None , area: str ='M1', model=None) -> np.ndarray:
+    "Similar to `get_data_array` only returns an epoch of length `epoch_L` randomly chosen along each trial"
+    if isinstance(data_list, pd.DataFrame):
+        data_list = [data_list]
+    if isinstance(model, int):
+        model = PCA(n_components=model, svd_solver='full')
     
-#     field = f'{area}_rates'
-#     n_shared_trial = np.inf
-#     target_ids = np.unique(data_list[0].target_id)
-#     for df in data_list:
-#         for target in target_ids:
-#             df_ = pyal.select_trials(df, df.target_id== target)
-#             n_shared_trial = np.min((df_.shape[0], n_shared_trial))
+    field = f'{area}_rates'
+    n_shared_trial = np.inf
+    target_ids = np.unique(data_list[0].target_id)
+    for df in data_list:
+        for target in target_ids:
+            df_ = pyal.select_trials(df, df.target_id== target)
+            n_shared_trial = np.min((df_.shape[0], n_shared_trial))
 
-#     n_shared_trial = int(n_shared_trial)
+    n_shared_trial = int(n_shared_trial)
 
-#     # finding the number of timepoints
-#     n_timepoints = int(df_[field][0].shape[0])
-#     # n_timepoints = int(df_[field][0].shape[0])
-#     if epoch_L is None:
-#         epoch_L = n_timepoints
-#     else:
-#         assert epoch_L < n_timepoints, 'Epoch longer than data'
+    # finding the number of timepoints
+    n_timepoints = int(df_[field][0].shape[0])
+    # n_timepoints = int(df_[field][0].shape[0])
+    if epoch_L is None:
+        epoch_L = n_timepoints
+    else:
+        assert epoch_L < n_timepoints, 'Epoch longer than data'
     
-#     # pre-allocating the data matrix
-#     AllData = np.zeros((len(data_list), len(target_ids), n_shared_trial, epoch_L, model.n_components))
+    # pre-allocating the data matrix
+    AllData = np.zeros((len(data_list), len(target_ids), n_shared_trial, epoch_L, model.n_components))
 
-#     for session, df in enumerate(data_list):
-#         rates = np.concatenate(df[field].values, axis=0)
-#         rates_model = model.fit(rates)
-#         df_ = pyal.apply_dim_reduce_model(df, rates_model, field, '_pca');
+    for session, df in enumerate(data_list):
+        rates = np.concatenate(df[field].values, axis=0)
+        rates_model = model.fit(rates)
+        df_ = pyal.apply_dim_reduce_model(df, rates_model, field, '_pca');
 
-#         for targetIdx,target in enumerate(target_ids):
-#             df__ = pyal.select_trials(df_, df_.target_id==target)
-#             all_id = df__.trial_id.to_numpy()
-#             # to guarantee shuffled ids
-#             rng.shuffle(all_id)
-#             # select the right number of trials to each target
-#             df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
-#             for trial, trial_rates in enumerate(df__._pca):
-#                 time_idx = rng.integers(trial_rates.shape[0]-epoch_L)
-#                 trial_data = trial_rates[time_idx:time_idx+epoch_L,:]
-#                 AllData[session,targetIdx,trial, :, :] = trial_data
+        for targetIdx,target in enumerate(target_ids):
+            df__ = pyal.select_trials(df_, df_.target_id==target)
+            all_id = df__.reach_id.to_numpy()
+            # to guarantee shuffled ids
+            rng.shuffle(all_id)
+            # select the right number of trials to each target
+            df__ = pyal.select_trials(df__, lambda trial: trial.reach_id in all_id[:n_shared_trial])
+            for trial, trial_rates in enumerate(df__._pca):
+                time_idx = rng.integers(trial_rates.shape[0]-epoch_L)
+                trial_data = trial_rates[time_idx:time_idx+epoch_L,:]
+                AllData[session,targetIdx,trial, :, :] = trial_data
 
-#     return AllData
+    return AllData
