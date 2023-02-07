@@ -21,12 +21,13 @@ BIN_SIZE = .03  # sec
 WINDOW_exec = (0.0, .35)  # sec
 n_components = 10  # min between M1 and PMd
 areas = ('M1', 'PMd', 'MCx')
-n_angle_groups = 4
+n_angle_groups = 6
 subset_radius = 2
 target_grid = (3,3)
 n_centers = target_grid[0]*target_grid[1]
 target_groups = np.array([str(i)+ '_'+ str(j) for i in range(n_centers) for j in range(n_angle_groups)])
 
+min_trials_per_target = 6
 # prep_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
 #                                      rel_start=int(WINDOW_prep[0]/BIN_SIZE),
 #                                      rel_end=int(WINDOW_prep[1]/BIN_SIZE)
@@ -146,6 +147,33 @@ def set_target_groups(df):
     df['target_group'] = [str(center)+'_'+str(angle) for center,angle in zip(df.center_id, df.angle_group)]
 
     return df
+
+def get_matched_reaches_idx(df1, df2):
+    from scipy.optimize import linear_sum_assignment
+
+    # match by pos mse
+    mses = np.zeros([len(df1), len(df2)])
+    for i, pos1 in enumerate(df1.pos_centered):
+        for j, pos2 in enumerate(df2.pos_centered):
+            mse = np.mean((pos1-pos2)**2)
+            mses[i][j] = mse
+
+    row_idx, col_idx = linear_sum_assignment(mses.T, maximize=False)
+    min_mses = mses.T[row_idx, col_idx]
+    df1_idx = col_idx
+
+    #remove trials with high mse
+    all_mses= mses.T.flatten()
+    # plt.hist(min_mses, histtype='step')
+    cutoff = np.percentile(mses.T.flatten(), 1)
+    keep_trials = (min_mses<cutoff)
+
+    #get indices for matched trials
+    df1_idx = df1_idx[keep_trials]
+    df2_idx = np.array(range(len(df2)))[keep_trials]
+    
+    return df1_idx, df2_idx
+
 
 def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: str ='M1', model: Callable =None, n_components:int = 10) -> np.ndarray:
     """
