@@ -165,7 +165,7 @@ def get_matched_reaches_idx(df1, df2):
     #remove trials with high mse
     all_mses= mses.T.flatten()
     # plt.hist(min_mses, histtype='step')
-    cutoff = np.percentile(mses.T.flatten(), 1)
+    cutoff = np.percentile(mses.T.flatten(), 5)
     keep_trials = (min_mses<cutoff)
 
     #get indices for matched trials
@@ -174,6 +174,84 @@ def get_matched_reaches_idx(df1, df2):
     
     return df1_idx, df2_idx
 
+
+def get_paired_data_arrays(df1, df2, epoch: Callable =None , area: str ='M1', model: Callable =None, n_components:int = 10) -> np.ndarray:
+    """
+    Applies the `model` to the `data_list` and return a data matrix of the shape: sessions x targets x trials x time x modes
+    with the minimum number of trials and timepoints shared across all the datasets/targets.
+    
+    Parameters
+    ----------
+    `data_list`: list of pd.dataFrame datasets from pyalData (could also be a single dataset)
+    `epoch`: an epoch function of the type `pyal.generate_epoch_fun()`
+    `area`: area, either: 'M1', or 'S1', or 'PMd', ...
+    `model`: a model that implements `.fit()`, `.transform()` and `n_components`. By default: `PCA(10)`. If it's an integer: `PCA(integer)`.
+    `n_components`: use `model`, this is for backward compatibility
+    
+    Returns
+    -------
+    `AllData`: np.ndarray
+
+    Signature
+    -------
+    AllData = get_data_array(data_list, execution_epoch, area='M1', model=10)
+    all_data = np.reshape(AllData, (-1,10))
+    """
+    assert (len(df1)== len(df2))
+
+    if model is None:
+        model = PCA(n_components=n_components, svd_solver='full')
+    elif isinstance(model, int):
+        model = PCA(n_components=model, svd_solver='full')
+    
+    field = f'{area}_rates'
+    n_shared_trial = np.inf
+    target_ids = np.unique(df1.target_id)
+
+    for df in [df1,df2]:
+        for target in target_ids:
+            df_ = pyal.select_trials(df, df.target_id== target)
+            n_shared_trial = np.min((df_.shape[0], n_shared_trial))
+
+    n_shared_trial = int(n_shared_trial)
+
+    # finding the number of timepoints
+    if epoch is not None:
+        df_ = pyal.restrict_to_interval(df1,epoch_fun=epoch)
+    n_timepoints = int(df_[field][0].shape[0])
+
+    # pre-allocating the data matrix
+    AllData1 = np.empty((1, len(target_ids), n_shared_trial, n_timepoints, model.n_components))
+    AllData2 = np.empty((1, len(target_ids), n_shared_trial, n_timepoints, model.n_components))
+
+    rng = np.random.default_rng(12345)
+  
+    df1_ = pyal.restrict_to_interval(df1, epoch_fun=epoch) if epoch is not None else df
+    df1_ = pyal.dim_reduce(df1_, model, field, '_pca');
+
+    df2_ = pyal.restrict_to_interval(df2, epoch_fun=epoch) if epoch is not None else df
+    df2_ = pyal.dim_reduce(df2_, model, field, '_pca');
+
+    for targetIdx,target in enumerate(target_ids):
+        df1__ = pyal.select_trials(df1_, df1_.target_id==target)
+        df2__ = pyal.select_trials(df2_, df2_.target_id==target)
+
+        all_id = df1__.reach_id.to_numpy()
+        # to guarantee shuffled ids
+        while ((all_id_sh := rng.permutation(all_id)) == all_id).all():
+            continue
+        all_id = all_id_sh
+
+        # select the right number of trials to each target
+        subset_ids = (df1__.reach_id.isin(all_id[:n_shared_trial]))
+        df1__ = df1__[subset_ids]
+        df2__ = df2__[subset_ids]
+
+        for trial, (trial_rates1, trial_rates2) in enumerate(zip(df1__._pca, df2__._pca)):
+            AllData1[0,targetIdx,trial, :, :] = trial_rates1
+            AllData2[0,targetIdx,trial, :, :] = trial_rates2
+
+    return AllData1, AllData2
 
 def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: str ='M1', model: Callable =None, n_components:int = 10) -> np.ndarray:
     """
@@ -191,7 +269,6 @@ def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: 
     Returns
     -------
     `AllData`: np.ndarray
-
     Signature
     -------
     AllData = get_data_array(data_list, execution_epoch, area='M1', model=10)
