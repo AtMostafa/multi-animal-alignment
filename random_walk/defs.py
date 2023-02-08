@@ -355,3 +355,26 @@ def _get_data_array(data_list: list[pd.DataFrame], epoch_L: int =None , area: st
                 AllData[session,targetIdx,trial, :, :] = trial_data
 
     return AllData
+
+def trim_across_monkey_corr(paired_dfs):
+    from scipy.stats import pearsonr
+    across_corrs = {}
+    #for each paired session
+    all_across_corrs = []
+    for _, df1__, df2__ in paired_dfs:
+
+        df1 = pyal.restrict_to_interval(df1__, epoch_fun=exec_epoch)
+        targets = np.unique(df1.target_id)
+        df2 = pyal.restrict_to_interval(df2__, epoch_fun=exec_epoch)
+
+        across_corrs = []
+        #correlate pairs of reaches
+        for pos1,pos2 in zip(df1.pos_centered, df2.pos_centered):
+            # mse = np.mean((pos1-pos2)**2)
+            # across_corrs.append(mse)
+
+            r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
+            across_corrs.append(np.mean(np.abs(r)))
+        all_across_corrs.append(across_corrs)
+
+    return all_across_corrs
