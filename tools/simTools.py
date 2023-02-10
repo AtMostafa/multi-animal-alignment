@@ -186,7 +186,7 @@ def model_to_pyaldata (seed, sim):
         'MCx_rates']
     df = pd.DataFrame(columns = column_names)
 
-    ntrials = len(test_data['idxoutofall'])
+    ntrials = len(test_data['target_id'])
     tsteps = params['tsteps']
     dt = params['dt']
     #populate columns
@@ -194,7 +194,7 @@ def model_to_pyaldata (seed, sim):
     df['seed'] = seed
     df['sim'] = sim
     df['target_param'] = test_data['target_param']
-    df['trial_id'] = test_data['idxoutofall']
+    df['trial_id'] = range(ntrials)
     df['bin_size'] = params['dt']
     df['idx_trial_start'] = 0
     df['idx_target_on'] = test_data['cue_onset']
