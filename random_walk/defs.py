@@ -23,7 +23,10 @@ n_components = 10  # min between M1 and PMd
 areas = ('M1', 'PMd', 'MCx')
 n_angle_groups = 6
 subset_radius = 2
+edge_dist = 3.5
+
 target_grid = (3,3)
+match_mse_cutoff_perc = 2
 n_centers = target_grid[0]*target_grid[1]
 target_groups = np.array([str(i)+ '_'+ str(j) for i in range(n_centers) for j in range(n_angle_groups)])
 
@@ -121,13 +124,19 @@ def set_target_groups(df):
     xlim = (-10,10)
     ylim = (-10,10)
 
-    x_centers = np.linspace(xlim[0], xlim[1], grid[0]+2)[1:-1]
-    y_centers = np.linspace(ylim[0], ylim[1], grid[1]+2)[1:-1]
-
+    x_centers = np.linspace(xlim[0]+edge_dist, xlim[1]-edge_dist, grid[0])
+    y_centers = np.linspace(ylim[0]+edge_dist, ylim[1]-edge_dist, grid[1])
+    x_centers2 = x_centers[:-1] + (x_centers[1]-x_centers[0])/2
+    y_centers2 = y_centers[:-1] + (y_centers[1]-y_centers[0])/2
     centers = []
     for x in x_centers:
         for y in y_centers:
             centers.append([x,y])
+
+    for x in x_centers2:
+        for y in y_centers2:
+            centers.append([x,y])
+
     centers = np.array(centers)
 
     #center targets and pos at origin
@@ -165,7 +174,7 @@ def get_matched_reaches_idx(df1, df2):
     #remove trials with high mse
     all_mses= mses.T.flatten()
     # plt.hist(min_mses, histtype='step')
-    cutoff = np.percentile(mses.T.flatten(), 5)
+    cutoff = np.percentile(mses.T.flatten(), match_mse_cutoff_perc)
     keep_trials = (min_mses<cutoff)
 
     #get indices for matched trials
@@ -446,7 +455,7 @@ def trim_across_monkey_corr(paired_dfs):
 
         across_corrs = []
         #correlate pairs of reaches
-        for pos1,pos2 in zip(df1.pos_centered, df2.pos_centered):
+        for pos1,pos2 in zip(df1.pos, df2.pos):
             # mse = np.mean((pos1-pos2)**2)
             # across_corrs.append(mse)
 
