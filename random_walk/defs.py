@@ -214,6 +214,7 @@ def get_paired_data_arrays(df1, df2, epoch: Callable =None , area: str ='M1', mo
         model = PCA(n_components=model, svd_solver='full')
     
     field = f'{area}_rates'
+    #get min trials for targets
     n_shared_trial = np.inf
     target_ids = np.unique(df1.target_id)
 
@@ -234,12 +235,13 @@ def get_paired_data_arrays(df1, df2, epoch: Callable =None , area: str ='M1', mo
     AllData2 = np.empty((1, len(target_ids), n_shared_trial, n_timepoints, model.n_components))
 
     rng = np.random.default_rng(12345)
-  
+
     df1_ = pyal.restrict_to_interval(df1, epoch_fun=epoch) if epoch is not None else df
     df1_ = pyal.dim_reduce(df1_, model, field, '_pca');
 
     df2_ = pyal.restrict_to_interval(df2, epoch_fun=epoch) if epoch is not None else df
     df2_ = pyal.dim_reduce(df2_, model, field, '_pca');
+
 
     for targetIdx,target in enumerate(target_ids):
         df1__ = pyal.select_trials(df1_, df1_.target_id==target)
@@ -251,7 +253,7 @@ def get_paired_data_arrays(df1, df2, epoch: Callable =None , area: str ='M1', mo
             continue
         all_id = all_id_sh
 
-        # select the right number of trials to each target
+        # select the right number of trials to each target, use same subset ids for reaches to remain paired
         subset_ids = (df1__.reach_id.isin(all_id[:n_shared_trial]))
         df1__ = df1__[subset_ids]
         df2__ = df2__[subset_ids]
