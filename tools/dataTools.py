@@ -7,6 +7,7 @@ from scipy.linalg import qr, svd, inv
 from scipy.interpolate import interp1d
 import pyaldata as pyal
 from sklearn.decomposition import PCA
+from scipy.spatial import procrustes
 from typing import Callable
 
 import logging
@@ -143,6 +144,19 @@ def canoncorr(X:np.array, Y: np.array, fullReturn: bool = False) -> np.array:
     V = Y @ B
 
     return A, B, r, U, V
+
+
+def procrustes_wrapper(data1: np.ndarray, data2: np.ndarray, fullReturn=False):
+    "Procrustes alignment wrapper based on `scipy.spatial.procrustes`."
+    assert data1.shape == data2.shape
+
+    mtx1, mtx2, _ = procrustes(data1, data2)
+    CCs = np.array([np.corrcoef(mtx1[:,j],mtx2[:,j])[0,1] for j in range(data1.shape[1])])
+
+    if not fullReturn:
+        return CCs
+    return mtx1, mtx2, CCs
+
 
 def CCA_pyal(df1:pd.DataFrame, field1: str, df2:pd.DataFrame =None, field2:str =None) -> np.array:
     """
