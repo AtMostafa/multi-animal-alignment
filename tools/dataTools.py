@@ -146,16 +146,23 @@ def canoncorr(X:np.array, Y: np.array, fullReturn: bool = False) -> np.array:
     return A, B, r, U, V
 
 
-def procrustes_wrapper(data1: np.ndarray, data2: np.ndarray, fullReturn=False):
-    "Procrustes alignment wrapper based on `scipy.spatial.procrustes`."
-    assert data1.shape == data2.shape
+def procrustes_wrapper(A: np.ndarray, B: np.ndarray, fullReturn=False):
+    """Procrustes alignment wrapper based on `scipy.spatial.procrustes`.
+    A, B: (samples/observations) x (features) matrix, for both: A.shape[0] >> A.shape[1]
+    fullReturn: whether all outputs should be returned or just `CCs` be returned
+    
+    returns: U, V, CCs 
+    U, V: transformed matrice from A, B
+    CCs: Correlations between transfomed signals, equivalent to Canonical correlations
+    """
+    assert A.shape == B.shape
 
-    mtx1, mtx2, _ = procrustes(data1, data2)
-    CCs = np.array([np.corrcoef(mtx1[:,j],mtx2[:,j])[0,1] for j in range(data1.shape[1])])
+    U, V, _ = procrustes(A, B)
+    CCs = np.array([np.corrcoef(mtx1[:,j],mtx2[:,j])[0,1] for j in range(A.shape[1])])
 
     if not fullReturn:
         return CCs
-    return mtx1, mtx2, CCs
+    return U, V, CCs
 
 
 def CCA_pyal(df1:pd.DataFrame, field1: str, df2:pd.DataFrame =None, field2:str =None) -> np.array:
