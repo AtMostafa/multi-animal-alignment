@@ -32,6 +32,20 @@ def summary(df):
     
     print('\n---\n')
 
+def normal_mov(df: pd.DataFrame, field:str ='hTrjB') -> pd.DataFrame:
+    """
+    normalises the 90 percent of the movements between -0.5 and +0.5
+    Should be applied after restricting to the interval of interest
+    """
+    df = df.copy()
+    hTrjB = [pos + abs(np.nanmin(pos,axis=0)) for pos in df[field]]
+    max_pos = np.array([np.nanmax(pos,axis=0) for pos in hTrjB])
+    max_val = np.percentile(max_pos, 90, axis=0)
+    hTrjB = [pos / max_val for pos in hTrjB]
+    hTrjB = [pos - np.nanmean(pos, axis=0) for pos in hTrjB]
+    df[field] = hTrjB
+    return df
+
 def load_pyal_data(path: pathlib.Path) -> pd.DataFrame:
     """
     Loads pyal_data files. If it's a *.mat file, it is loaded, gets pickled and returned.
@@ -158,7 +172,7 @@ def procrustes_wrapper(A: np.ndarray, B: np.ndarray, fullReturn=False):
     assert A.shape == B.shape
 
     U, V, _ = procrustes(A, B)
-    CCs = np.array([np.corrcoef(mtx1[:,j],mtx2[:,j])[0,1] for j in range(A.shape[1])])
+    CCs = np.array([np.corrcoef(U[:,j],V[:,j])[0,1] for j in range(A.shape[1])])
 
     if not fullReturn:
         return CCs
