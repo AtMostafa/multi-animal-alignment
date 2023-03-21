@@ -7,6 +7,7 @@ from scipy.linalg import qr, svd, inv
 from scipy.interpolate import interp1d
 import pyaldata as pyal
 from sklearn.decomposition import PCA
+from scipy.spatial import procrustes
 from typing import Callable
 
 import logging
@@ -30,6 +31,20 @@ def summary(df):
         pass
     
     print('\n---\n')
+
+def normal_mov(df: pd.DataFrame, field:str ='hTrjB') -> pd.DataFrame:
+    """
+    normalises the 90 percent of the movements between -0.5 and +0.5
+    Should be applied after restricting to the interval of interest
+    """
+    df = df.copy()
+    hTrjB = [pos + abs(np.nanmin(pos,axis=0)) for pos in df[field]]
+    max_pos = np.array([np.nanmax(pos,axis=0) for pos in hTrjB])
+    max_val = np.percentile(max_pos, 90, axis=0)
+    hTrjB = [pos / max_val for pos in hTrjB]
+    hTrjB = [pos - np.nanmean(pos, axis=0) for pos in hTrjB]
+    df[field] = hTrjB
+    return df
 
 def load_pyal_data(path: pathlib.Path) -> pd.DataFrame:
     """
@@ -143,6 +158,26 @@ def canoncorr(X:np.array, Y: np.array, fullReturn: bool = False) -> np.array:
     V = Y @ B
 
     return A, B, r, U, V
+
+
+def procrustes_wrapper(A: np.ndarray, B: np.ndarray, fullReturn=False):
+    """Procrustes alignment wrapper based on `scipy.spatial.procrustes`.
+    A, B: (samples/observations) x (features) matrix, for both: A.shape[0] >> A.shape[1]
+    fullReturn: whether all outputs should be returned or just `CCs` be returned
+    
+    returns: U, V, CCs 
+    U, V: transformed matrice from A, B
+    CCs: Correlations between transfomed signals, equivalent to Canonical correlations
+    """
+    assert A.shape == B.shape
+
+    U, V, _ = procrustes(A, B)
+    CCs = np.array([np.corrcoef(U[:,j],V[:,j])[0,1] for j in range(A.shape[1])])
+
+    if not fullReturn:
+        return CCs
+    return U, V, CCs
+
 
 def CCA_pyal(df1:pd.DataFrame, field1: str, df2:pd.DataFrame =None, field2:str =None) -> np.array:
     """
