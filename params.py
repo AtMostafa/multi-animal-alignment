@@ -7,6 +7,7 @@ import numpy as np
 from monkey import defs as monkey_defs
 from mouse import defs as mouse_defs
 from rnn import defs as rnn_defs
+from random_walk import defs as random_walk_defs
 
 repoPath = pathlib.Path.cwd()
 root = pathlib.Path("/data")
