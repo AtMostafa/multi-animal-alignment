@@ -118,3 +118,48 @@ class RNN(nn.Module):
         r1 = x1.tanh() #tanh activation
 
         return x1,r1
+
+    def force_training(self, X, P, output_weights_inv, target):
+          
+        tsteps, batch_size, _ = X.shape
+
+        # initial activity
+        hidden1 = self.init_hidden(batch_size)
+        x1 = hidden1
+        r1 = x1.tanh()
+
+        outv = torch.zeros(tsteps, batch_size, self.n_outputs).type(self.dtype) #initial output
+        hiddenl1 = torch.zeros(tsteps, batch_size, self.n_neurons).type(self.dtype)
+
+        # update a copy of the weights
+        weights = self.rnn_l1.weight_hh_l0.clone().detach()
+        orig_weights = weights.clone()
+
+        errors = []
+        mean_dw = []
+        for j in range(tsteps): #for each time step
+
+            x1,r1 = self.f_step(X[j],x1,r1, batch_size = batch_size) 
+   
+            hiddenl1[j] = r1
+
+            outv[j] = self.output(r1)
+        
+            # Now for the RLS algorithm:
+            # compute errors
+            err = (outv[j] - target[j]).squeeze()
+            err = output_weights_inv @ err 
+            r1_col = r1.reshape((r1.shape[2],1)) #n x p
+            pr = (P @ r1_col).squeeze() #n x p
+            norm = (1. + (r1_col.T @ pr.unsqueeze(1))).squeeze()
+            P -= torch.outer(pr, pr) / norm
+
+            #update weights
+            for i in range(self.n_neurons):
+                weights[i] -= err[i] * pr / norm
+            self.rnn_l1.weight_hh_l0.copy_(weights)
+
+        total_weight_changes = weights - orig_weights
+        mean_total_dw = torch.abs(total_weight_changes).mean().detach().item()
+
+        return outv, hiddenl1, P, mean_total_dw
