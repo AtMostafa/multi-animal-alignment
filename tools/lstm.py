@@ -12,7 +12,13 @@ def custom_r2_func(y_true, y_pred):
                           np.logical_not(np.isnan(y_pred)))
     c = np.corrcoef(y_true[mask].T, y_pred[mask].T) ** 2
     return np.diag(c[-int(c.shape[0]/2):,:int(c.shape[1]/2)])
-    # return r2_score(y_true[mask], y_pred[mask])
+
+def custom_r2_vaf(y_true, y_pred):
+    "$R^2$ value as variance explained"
+    mask = np.logical_and(np.logical_not(np.isnan(y_true)),
+                          np.logical_not(np.isnan(y_pred)))
+    return r2_score(y_true[mask], y_pred[mask])
+
 
 class LSTM(torch.nn.Module):
     "The LSTM network"

@@ -96,6 +96,20 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
     AllData = get_data_array(data_list, execution_epoch, area='M1', n_components=10)
     all_data = np.reshape(AllData, (-1,10))
     """
+    def normal_mov(df: pd.DataFrame, field:str ='hTrjB') -> pd.DataFrame:
+        """
+        normalises the 90 percent of the movements between -0.5 and +0.5
+        Should be applied after restricting to the interval of interest
+        """
+        df = df.copy()
+        hTrjB = [pos + abs(np.nanmin(pos,axis=0)) for pos in df[field]]
+        max_pos = np.array([np.nanmax(pos,axis=0) for pos in hTrjB])
+        max_val = np.percentile(max_pos, 90, axis=0)
+        hTrjB = [pos / max_val for pos in hTrjB]
+        hTrjB = [pos - np.nanmean(pos, axis=0) for pos in hTrjB]
+        df[field] = hTrjB
+        return df
+
     field = f'{area}_rates'
     n_shared_trial = np.inf
     for df in data_list:
@@ -114,6 +128,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
     AllVel  = np.empty((len(data_list), n_targets, n_shared_trial, n_timepoints, 2))
     for session, df in enumerate(data_list):
         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
+        # df_ = normal_mov(df_,'pos')
         rates = np.concatenate(df_[field].values, axis=0)
         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca')
