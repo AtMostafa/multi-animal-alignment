@@ -76,7 +76,7 @@ def custom_r2_func(y_true, y_pred):
 
 custom_r2_scorer = make_scorer(custom_r2_func)
 
-def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1', n_components: int =10) -> np.ndarray:
+def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1', n_components: int =10, normalize_pos = False) -> np.ndarray:
     """
     Applies PCA to the data and return a data matrix of the shape: sessions x targets x  trials x time x PCs
     with the minimum number of trials and timepoints shared across all the datasets/targets.
@@ -102,12 +102,8 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
         Should be applied after restricting to the interval of interest
         """
         df = df.copy()
-        hTrjB = [pos + abs(np.nanmin(pos,axis=0)) for pos in df[field]]
-        max_pos = np.array([np.nanmax(pos,axis=0) for pos in hTrjB])
-        max_val = np.percentile(max_pos, 90, axis=0)
-        hTrjB = [pos / max_val for pos in hTrjB]
-        hTrjB = [pos - np.nanmean(pos, axis=0) for pos in hTrjB]
-        df[field] = hTrjB
+        magnitude = np.percentile(np.abs(np.concatenate(df[field]).flatten()), 99)
+        df[field] = [pos/magnitude for pos in df[field]]
         return df
 
     field = f'{area}_rates'
@@ -128,12 +124,15 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
     AllVel  = np.empty((len(data_list), n_targets, n_shared_trial, n_timepoints, 2))
     for session, df in enumerate(data_list):
         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
-        # df_ = normal_mov(df_,'pos')
+        vel_mean = np.nanmean(pyal.concat_trials(df, 'pos'), axis=0)
+        df_.pos = [pos - vel_mean for pos in df_.pos]
+        if normalize_pos:
+            df_ = normal_mov(df_,'pos')
+
         rates = np.concatenate(df_[field].values, axis=0)
         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca')
-        vel_mean = np.nanmean(pyal.concat_trials(df, 'pos'), axis=0)
-
+        
         for target in range(n_targets):
             df__ = pyal.select_trials(df_, df_.target_id==target)
             all_id = df__.trial_id.to_numpy()
@@ -142,7 +141,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
             df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
             for trial, (trial_rates,trial_vel) in enumerate(zip(df__._pca, df__.pos)):
                 AllData[session,target,trial, :, :] = trial_rates
-                AllVel[session,target,trial, :, :] = trial_vel - vel_mean
+                AllVel[session,target,trial, :, :] = trial_vel
 
     return AllData, AllVel
 
