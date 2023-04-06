@@ -461,3 +461,30 @@ def trim_across_rnn_corr(dfs):
 #                         r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
 #                         within_corrs[df1_.seed[0]].append(np.mean(np.abs(r)))
 #     return within_corrs
+
+def get_weights(seed,sim, before_training=False):
+
+    outdir = get_outdir(seed, sim)
+    if before_training:
+        weights = np.load(outdir+'training.npy',allow_pickle = True).item()['params0']
+    else:
+        weights = np.load(outdir+'training.npy',allow_pickle = True).item()['params1']
+
+    dic = {
+        'input': weights['wihl1'],
+        'output': weights['wout'],
+        'rec': weights['whhl1'],
+    }
+
+    return dic
+
+def get_weight_changes(seed,sim):
+
+    weights0 = get_weights(seed,sim,before_training=True)
+    weights1 = get_weights(seed,sim,before_training=False)
+
+    dw = {}
+    for key in weights0.keys():
+        dw[key] = weights1[key]-weights0[key]
+
+    return dw
