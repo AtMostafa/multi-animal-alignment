@@ -13,7 +13,8 @@ from typing import Callable
 
 
 rng = np.random.default_rng(np.random.SeedSequence(12345))
-
+ref_file = 'Chewie_RT_CS_2016-10-21.mat'
+ex_file = 'Mihili_RT_VR_2014-01-14.mat'
 # raster_example = ('Chewie_CO_FF_2016-10-13.p', 'Mihili_CO_VR_2014-03-03.p')
 # MAX_HISTORY = 3  #int: no of bins to be added as history
 BIN_SIZE = .03  # sec
@@ -105,7 +106,7 @@ def get_reaches_df(df):
     df_reaches = df_reaches.sort_values(by=['trial_id', 'reach'])
     df_reaches = df_reaches[df_reaches.idx_reach_end < 200] #TODO: better cutoff for slow reaches
 
-    #fix pos offset
+    #fix workspace center offset
     df_second_reaches = df_reaches[df_reaches.reach == 2] #look at offset for second reach
     idx = [all(np.abs(x) < 100) for x in df_second_reaches.start_center] #remove wrong positions
     df_second_reaches = df_second_reaches[idx]
