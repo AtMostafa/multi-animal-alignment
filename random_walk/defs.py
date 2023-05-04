@@ -6,7 +6,7 @@ import scipy.linalg as linalg
 import scipy.stats as stats
 from sklearn.linear_model import Ridge, LinearRegression
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import make_scorer, r2_score
+from sklearn.metrics import make_scorer, r2_score, mean_squared_error
 import pyaldata as pyal
 import math
 from typing import Callable
@@ -454,17 +454,15 @@ def trim_across_monkey_corr(paired_dfs):
     for _, df1__, df2__ in paired_dfs:
 
         df1 = pyal.restrict_to_interval(df1__, epoch_fun=exec_epoch)
-        targets = np.unique(df1.target_id)
         df2 = pyal.restrict_to_interval(df2__, epoch_fun=exec_epoch)
 
         across_corrs = []
         #correlate pairs of reaches
         for pos1,pos2 in zip(df1.pos, df2.pos):
-            # mse = np.mean((pos1-pos2)**2)
-            # across_corrs.append(mse)
+            across_corrs.append(mean_squared_error(pos1,pos2))
 
-            r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
-            across_corrs.append(np.mean(np.abs(r)))
+            # r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
+            # across_corrs.append(np.mean(np.abs(r)))
         all_across_corrs.append(across_corrs)
 
     return all_across_corrs
