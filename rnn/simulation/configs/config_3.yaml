@@ -24,7 +24,7 @@ regularization:
   ccareg_start_trial: 0
   ccareg_type: sum_squared
   clipgrad: 0.2
-  delta: 0.5
+  delta: 0.25
   gamma1: 0.0
   pcas_file: ''
   rel_end: 40
@@ -34,7 +34,7 @@ simulation:
   sim_number: null
 timestamp: null
 training:
-  optimizer: FORCE
+  optimizer: Adam
   batch_size: 64
-  lr: 100.0
+  lr: 0.0005
   training_trials: 300

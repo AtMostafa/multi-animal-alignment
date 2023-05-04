@@ -357,7 +357,7 @@ def get_cc_across_groups(dfs1, dfs2, n_components, epoch_fun = None):
 
     return ccs
 
-def trim_across_groups_rnn_corr(dfs1, dfs2):
+def trim_across_groups_rnn_corr(dfs1, dfs2, epoch_fun = rnn_defs.exec_epoch):
     """
     Get behavioural correlations across networks of different simulation groups
 
@@ -376,11 +376,11 @@ def trim_across_groups_rnn_corr(dfs1, dfs2):
 
     across_corrs = {}
     for dfi, df1__ in enumerate(dfs1):
-        df1 = pyal.restrict_to_interval(df1__, epoch_fun=rnn_defs.exec_epoch)
+        df1 = pyal.restrict_to_interval(df1__, epoch_fun=epoch_fun)
         targets = np.unique(df1.target_id)
         across_corrs[df1.seed[0]]={}
         for dfj, df2__ in enumerate(dfs2):
-            df2 = pyal.restrict_to_interval(df2__, epoch_fun=rnn_defs.exec_epoch)
+            df2 = pyal.restrict_to_interval(df2__, epoch_fun=epoch_fun)
             across_corrs[df2.seed[0]] = {} if df2.seed[0] not in across_corrs.keys() else across_corrs[df2.seed[0]]
             across_corrs[df1.seed[0]][df2.seed[0]]=[]
             for target in targets:
@@ -397,7 +397,7 @@ def trim_across_groups_rnn_corr(dfs1, dfs2):
 
     return across_corrs
 
-def trim_across_rnn_corr(dfs):
+def trim_across_rnn_corr(dfs, epoch_fun = rnn_defs.exec_epoch):
     """
     Get behavioural correlations across networks
 
@@ -414,11 +414,11 @@ def trim_across_rnn_corr(dfs):
 
     across_corrs = {}
     for dfi, df1__ in enumerate(dfs):
-        df1 = pyal.restrict_to_interval(df1__, epoch_fun=rnn_defs.exec_epoch)
+        df1 = pyal.restrict_to_interval(df1__, epoch_fun=epoch_fun)
         targets = np.unique(df1.target_id)
         across_corrs[df1.seed[0]]={}
         for dfj, df2__ in enumerate(dfs):
-            df2 = pyal.restrict_to_interval(df2__, epoch_fun=rnn_defs.exec_epoch)
+            df2 = pyal.restrict_to_interval(df2__, epoch_fun=epoch_fun)
             across_corrs[df2.seed[0]] = {} if df2.seed[0] not in across_corrs.keys() else across_corrs[df2.seed[0]]
             if dfj <= dfi: continue
             across_corrs[df1.seed[0]][df2.seed[0]]=[]
