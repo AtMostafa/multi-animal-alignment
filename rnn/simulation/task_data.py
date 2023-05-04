@@ -60,3 +60,54 @@ class Task_Dataset(Dataset):
     def get_stimulus_target(self):
         return self.stimulus, self.target
 
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    import matplotlib as mpl
+
+    datadir = '../data/dataset_chewie_bl0pos'
+    data = np.load(datadir+'.npy',allow_pickle = True).item()
+    print(data.keys())
+    print(data['params'])
+
+    dataset = Task_Dataset(datadir)
+
+    datadir2 = '../data/dataset_chewie_prep'
+    data2 = np.load(datadir2+'.npy',allow_pickle = True).item()
+    print(data2.keys())
+    print(data2['params'])
+    dataset2 = Task_Dataset(datadir2)
+
+    fig, axs = plt.subplots(nrows =2, figsize = (5,5), sharex=True)
+    i = 0
+    n_in = dataset.stimulus.shape[-1]
+    #stimuli
+    for j in range(n_in):
+        axs[0].plot(dataset.stimulus[i,:,j], label= j) #hold
+    # axs[0].plot(dataset.stimulus[i,:,1], label = 'cos', linestyle = '--') #cos
+    # axs[0].plot(dataset.stimulus[i,:,2], label = 'sin', linestyle = 'dotted') #sin
+    # axs[0].plot(dataset.stimulus[i,:,3], label = 'length', linestyle = '-.') #length
+    axs[0].legend(title = 'Stimuli', bbox_to_anchor=(1.1, 1.05))
+
+    #target: pos
+    axs[1].plot(dataset.target[i,:,0], label = 'x pos') #x vel
+    axs[1].plot(dataset.target[i,:,1], label = 'y pos') #y vel
+    axs[1].legend(title = 'Target pos',  bbox_to_anchor=(1.1, 1.05))
+
+    dataset = dataset2
+    fig, axs = plt.subplots(nrows =2, figsize = (5,5), sharex=True)
+    i = 0
+    n_in = dataset.stimulus.shape[-1]
+    #stimuli
+    for j in range(n_in):
+        axs[0].plot(dataset.stimulus[i,:,j], label= j) #hold
+    # axs[0].plot(dataset.stimulus[i,:,1], label = 'cos', linestyle = '--') #cos
+    # axs[0].plot(dataset.stimulus[i,:,2], label = 'sin', linestyle = 'dotted') #sin
+    # axs[0].plot(dataset.stimulus[i,:,3], label = 'length', linestyle = '-.') #length
+    axs[0].legend(title = 'Stimuli', bbox_to_anchor=(1.1, 1.05))
+
+    #target: pos
+    axs[1].plot(dataset.target[i,:,0], label = 'x pos') #x vel
+    axs[1].plot(dataset.target[i,:,1], label = 'y pos') #y vel
+    axs[1].legend(title = 'Target pos',  bbox_to_anchor=(1.1, 1.05))
+
+# %%

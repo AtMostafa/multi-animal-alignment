@@ -15,6 +15,8 @@ from params import rnn_defs
 # %%
 seed = int(sys.argv[1])
 sim_number = int(sys.argv[2])
+# seed = 1000020
+# sim_number = 12
 rnn_epoch = rnn_defs.exec_epoch
 
 # get and process testing data and output from previously trained network
@@ -35,3 +37,5 @@ dict={
     'move_onsets': move_onsets, #movement on based on threshold=9
 }
 np.save(rnn_defs.PROJ_DIR + rnn_defs.RESULTS_FOLDER + 'pca_%s_%s' % (seed, sim_number), dict)
+
+# %%
