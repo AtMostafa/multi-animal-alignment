@@ -15,7 +15,6 @@ from typing import Callable
 rng = np.random.default_rng(np.random.SeedSequence(12345))
 ref_file = 'Chewie_RT_CS_2016-10-21.mat'
 ex_file = 'Mihili_RT_VR_2014-01-14.mat'
-# raster_example = ('Chewie_CO_FF_2016-10-13.p', 'Mihili_CO_VR_2014-03-03.p')
 # MAX_HISTORY = 3  #int: no of bins to be added as history
 BIN_SIZE = .03  # sec
 # WINDOW_prep = (-.4, .05)  # sec
