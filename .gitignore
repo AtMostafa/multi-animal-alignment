@@ -135,3 +135,7 @@ rnn/__pycache__/
 rnn/data/
 rnn/results_old/
 data/
+rnn/results*
+
+# random walk results
+random_walk/figures/

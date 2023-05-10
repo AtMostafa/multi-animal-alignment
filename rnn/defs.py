@@ -4,6 +4,7 @@ import pyaldata as pyal
 # DIRECTORIES ##################################################
 PROJ_DIR=os.path.dirname(os.path.realpath(__file__))+'/'
 RESULTS_FOLDER = "results/"
+# RESULTS_FOLDER = "results_prep/"
 DATA_FOLDER = "data/"
 FIGURES_FOLDER = "figures/"
 CONFIGS_FOLDER = "simulation/configs/"
@@ -15,12 +16,14 @@ PRINT_EPOCH = 5
 MAX_Y_POS = 7
 MOVEMENT_SPEED_THRESHOLD = 6.0
 LOSS_THRESHOLD = 0.2
-MAX_TRAINING_TRIALS = 500
-MIN_TRAINING_TRIALS = 50
+MAX_TRAINING_TRIALS = 500#1001#500
+MIN_TRAINING_TRIALS = 50#1000#50
 
 #RANDOM SEEDS
 SEEDS1 = range(1000020,1000030)
 SEEDS2 = range(1000030,1000040)
+# SEEDS1 = range(1000020,1000030)
+# SEEDS2 = range(1000030,1000040)
 
 #TRAINING
 BATCH_SIZE = 64

@@ -33,7 +33,7 @@ class ConfigTemplate:
                 name='p_recurrent',
                 types=[float],
                 requirements=[
-                    lambda x: x > 0
+                    lambda x: x >= 0
                 ],
             ),
             config_field.Field(

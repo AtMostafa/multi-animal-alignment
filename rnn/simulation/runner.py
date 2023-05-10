@@ -102,14 +102,20 @@ class Runner:
         # set up params/weights for model and optimizer
         self.model = self._create_and_initialize_weights(self.model)
 
+        # get and save initial parameters
+        params0 = self.model.save_parameters()
+
         #train
-        lc, training_trial = self.train()
+        if self._config.optimizer == 'FORCE':
+            lc, training_trial = self.train_force()
+        else:
+            lc, training_trial = self.train()
 
         # get and save final parameters
         params1 = self.model.save_parameters()
 
         # save parameters
-        dic = {'lc':np.array(lc), 'params1':params1}
+        dic = {'lc':np.array(lc), 'params0': params0, 'params1':params1}
         np.save(self._outdir+'training',dic)
 
         # save the final model after training
@@ -361,7 +367,71 @@ class Runner:
         cca_pen = torch.sum(ccs[start-1:end]**2)
 
         return cca_pen
-            
+    
+    def train_force(self):
+        """ 
+        Train a model. 
+
+        Returns
+        -------
+        lc: list
+            loss during training
+        """
+        torch.autograd.set_detect_anomaly(True)
+        lc = [] # save loss
+        training_trial = 0
+        finished_training = False
+        stim_test, target_test = self._setup_testdata()
+
+        #no gradients needed in force training
+        with torch.no_grad():
+
+            # initialize the inverse correlation matrix
+            P = torch.eye(self._config.n1)/self._config.lr
+            P = P.type(self.dtype)
+
+            # get inverse of output weights
+            output_weights_inv = torch.linalg.pinv(self.model.output.weight.clone().detach())
+
+            #batches include equal numbers of trials for each target
+            for batch_idx, (stimulus, target) in enumerate(DataLoader(self.dataset, shuffle = True, batch_size = self._config.batch_size)): 
+                stimulus, target = stimulus.transpose(1,0).type(self.dtype), target.transpose(1,0).type(self.dtype)
+
+                train_running_loss = 0.0
+
+                # one training step
+                output, _, P, mean_total_dw = self.model.force_training(stimulus, P, output_weights_inv, target)
+
+                #calculate loss
+                loss = self.criterion(output[50:], target[50:]) # only look at time points > 50dt  
+                loss_train = loss.mean() 
+
+                #calculate testing error
+                testout, _  = self.test_current_model(stim_test)
+
+                test_error = self.criterion(testout[50:], target_test[50:]) # only look at time points > 50dt  
+                test_error = test_error.mean()
+
+                train_running_loss = [loss_train.detach().item(), test_error.detach().item(), mean_total_dw]
+
+                toprint = OrderedDict()
+                toprint['Loss'] = loss_train
+                toprint['Error'] = test_error
+                toprint['Weight change'] = mean_total_dw
+    
+                self._log(training_trial, toprint) 
+                    
+                lc.append([train_running_loss]) 
+                
+                training_trial += 1 
+                if training_trial >= rnn_defs.MIN_TRAINING_TRIALS: #train for at least n trials...
+                    if (np.mean(np.array(lc)[-10:,0,0]) <= rnn_defs.LOSS_THRESHOLD) or \
+                     (training_trial >= rnn_defs.MAX_TRAINING_TRIALS): #...and up to m trials
+                        finished_training = True
+                        break
+
+        return lc, training_trial
+
 
     def train(self):
         """ 
@@ -477,3 +547,4 @@ class Runner:
                     }, self._outdir+'model_'+str(epoch)) 
 
 
+# if __name__ == "__main__":
