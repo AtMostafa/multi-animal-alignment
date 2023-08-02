@@ -220,13 +220,13 @@ def VAF_pc_cc (X: np.ndarray, C: np.ndarray, A: np.ndarray) -> np.ndarray:
     `VAFs`: np.array with VAF for each axes of `C`, normalised between 0<VAF<1 for each axis, `sum(VAFs)` equals to total VAF.
     """
     # following the notation in Gallego 2018
-    D = inv(A.T@A)@A.T@C
-    E = C.T@A
     norm = lambda m:np.sum(m**2)
     
     VAFs=np.empty((C.shape[0],))
     for comp in range(1,C.shape[0]+1):
-        VAF = norm(X - X @ E[:,:comp] @ D[:comp,:]) / norm(X)
+        D = inv(A[:,:comp].T @ A[:,:comp]) @ A[:,:comp].T @ C
+        E = C.T @ A[:,:comp]
+        VAF = norm(X - X @ E @ D) / norm(X)
         VAFs[comp-1] = 1-VAF
 
     VAFs = np.array([VAFs[0],*np.diff(VAFs)])
