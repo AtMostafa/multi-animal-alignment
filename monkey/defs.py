@@ -98,8 +98,7 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
     """
     def normal_mov(df: pd.DataFrame, field:str ='hTrjB') -> pd.DataFrame:
         """
-        normalises the 90 percent of the movements between -0.5 and +0.5
-        Should be applied after restricting to the interval of interest
+        normalises based on 99th percentile for the magnitude of the movement
         """
         df = df.copy()
         magnitude = np.percentile(np.abs(np.concatenate(df[field]).flatten()), 99)
