@@ -8,11 +8,10 @@ from monkey import defs as monkey_defs
 from mouse import defs as mouse_defs
 from random_walk import defs as random_walk_defs
 from rnn import defs as rnn_defs
-from random_walk import defs as random_walk_defs
 
 repoPath = pathlib.Path.cwd()
 root = pathlib.Path("/data")
-# root = pathlib.Path(repoPath/"data")
+root = pathlib.Path(repoPath/"data")
 figPath = repoPath / 'figures'
 LargeFig = (7,8)
 MedFig = (4.3,4.3)
