@@ -1,6 +1,6 @@
 #%%
 '''
-Save latent dynamics (PCs) from previously trained network. Used to penalise CCs during training.
+Save latent dynamics (PCs) from previously trained network. Used to constrain CCs during training.
 '''
 #%%
 from random import sample
@@ -15,8 +15,6 @@ from params import rnn_defs
 # %%
 seed = int(sys.argv[1])
 sim_number = int(sys.argv[2])
-# seed = 1000020
-# sim_number = 12
 rnn_epoch = rnn_defs.exec_epoch
 
 # get and process testing data and output from previously trained network

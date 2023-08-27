@@ -328,17 +328,18 @@ class Runner:
         from kornia.filters.kernels import get_gaussian_kernel1d
 
         tsteps, batch_size, n_neurons = rl1.shape
-
         #smooth signals
         ##setup signals: batch, neurons, tsteps
         rl1 = torch.flatten(rl1.permute(1,2,0), 0,1)
-        rl1 = rl1.unsqueeze(0).permute(1,0,2)
+        rl1 = rl1.unsqueeze(0).permute(1,0,2) # (batchxneurons, 1, tsteps)
+
         ##get smoothing window
         std = 0.05
         bin_length = dt
         sigma = std/bin_length
         kernel_size =int(10*sigma)
-        win = get_gaussian_kernel1d(kernel_size, sigma, force_even = True).unsqueeze(0).unsqueeze(0).type(self.dtype)
+        win = get_gaussian_kernel1d(kernel_size, sigma, force_even = True).unsqueeze(0).type(self.dtype)
+
         ##convolve
         rl1 = F.pad(rl1, (int(kernel_size/2), int(kernel_size/2)-1), mode='reflect')
         rl1 = F.conv1d(rl1.double(), win.double())
@@ -480,7 +481,7 @@ class Runner:
                 reg1act = self._config.beta1*rl1.pow(2).mean()
                 
                 ## penalise CCA
-                if self._config.ccareg & (training_trial >= self._config.ccareg_start_trial):
+                if self._config.ccareg & (training_trial >= self._config.ccareg_start_trial) & (self._config.delta != 0):
                     regcca = self._config.delta * self.cca_penalisation(rl1, pcas_calculated, move_onsets, self.task_params.dt)
                 else:
                     regcca = 0
