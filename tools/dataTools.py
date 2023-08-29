@@ -1,6 +1,4 @@
 import pathlib, pickle
-from scipy.io import loadmat
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.linalg import qr, svd, inv
@@ -9,9 +7,7 @@ import pyaldata as pyal
 from sklearn.decomposition import PCA
 from scipy.spatial import procrustes
 from typing import Callable
-
 import logging
-
 import torch
 
 def summary(df):

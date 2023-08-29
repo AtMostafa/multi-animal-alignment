@@ -11,7 +11,7 @@ from rnn import defs as rnn_defs
 
 repoPath = pathlib.Path.cwd()
 root = pathlib.Path("/data")
-root = pathlib.Path(repoPath/"data")
+# root = pathlib.Path(repoPath/"data")
 figPath = repoPath / 'figures'
 LargeFig = (7,8)
 MedFig = (4.3,4.3)
