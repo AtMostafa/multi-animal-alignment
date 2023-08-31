@@ -42,7 +42,6 @@ def plot_pos_ex(df, gs, fig, targets, trial = 12, get_mean = True):
         data = df_.pos[trial]
         while np.isnan(data := df_.pos[trial]).sum()>0:
             trial +=1
-        data -= np.mean(data,axis=0)
         if get_mean:
             data -= np.mean(data, axis=0, keepdims=True)
         ax = fig.add_subplot(gs[j])
