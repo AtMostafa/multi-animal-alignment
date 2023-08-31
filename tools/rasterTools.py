@@ -12,10 +12,10 @@ def plot_fr_raster(df, gs, fig, targets, trial=12, area = 'M1'):
     #example trial data for each target
     for tar in targets:
         df_ = pyal.select_trials(df, df.target_id==tar)
-        df_ = pyal.remove_low_firing_neurons(df_, f'{area}_rates', 1)
+        # df_ = pyal.remove_low_firing_neurons(df_, f'{area}_rates', 1)
         fr = df_[f'{area}_rates'][trial]
         data.append(fr)
-        data = np.array(data)
+    data = np.array(data)
     vmin = np.amin(data, axis= (0,1))
     vmax = np.amax(data, axis= (0,1))
 

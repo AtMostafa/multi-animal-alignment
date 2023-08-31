@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 import tools.dataTools as dt
+import tools.ccaTools as cca
 import rnn.defs as rnn_defs
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt

@@ -13,12 +13,13 @@ import matplotlib.cm as cm
 
 from tools import dataTools as dt
 from tools import corrTools as ct
+from tools import ccaTools as cca
 from tools import utilityTools as utility
 monkey_defs = params.monkey_defs
 mouse_defs = params.mouse_defs
 
 @utility.report
-def monkey_target_decoding(allDFs):
+def monkey_target_decoding(allDFs, epoch, area):
     defs = monkey_defs
     classifier_model = GaussianNB
 
@@ -30,7 +31,7 @@ def monkey_target_decoding(allDFs):
             continue  # remove Jaco from this analysis
 
         # within animal decoding ######
-        AllData = dt.get_data_array([df1], defs.prep_epoch, area=defs.areas[2], model=defs.n_components)
+        AllData = dt.get_data_array([df1], epoch, area=area, model=defs.n_components)
         # adding history
         AllData = dt.add_history_to_data_array(AllData,defs.MAX_HISTORY)
         AllData1 = AllData[0,...]
@@ -268,7 +269,7 @@ def plot_decoding(ax, allDFs, epoch, area, target = False, redo = False, dataset
         within_score, aligned_score, unaligned_score = monkey_target_decoding(allDFs, epoch, area)
     else:
         if dataset == 'monkey':
-            within_score, aligned_score, unaligned_score = monkey_decoding(allDFs, epoch, area, redo, custom_r2_func, normalize_pos)
+            within_score, aligned_score, unaligned_score = monkey_decoding(allDFs, epoch, area, redo = redo,  custom_r2_func=custom_r2_func, normalize_pos=normalize_pos)
         elif dataset == 'mouse':
             within_score, aligned_score, unaligned_score = mouse_decoding(allDFs, epoch, area, custom_r2_func, normalize_pos)
 

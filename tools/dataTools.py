@@ -14,6 +14,7 @@ import pickle
 from collections import Counter
 from tools import utilityTools as utility
 mouse_defs = params.mouse_defs
+monkey_defs = params.monkey_defs
 random_walk_defs = params.random_walk_defs
 
 rng = np.random.default_rng(12345)
@@ -318,6 +319,32 @@ def get_data_array_and_pos(data_list: list[pd.DataFrame], epoch , area: str ='M1
 
     return AllData, AllVel
 
+def get_full_monkey_data(data_list):
+    full_list_MCx = []
+    for animal, sessionList in data_list[monkey_defs.areas[2]].items():
+        if 'Mr' in animal:
+            continue  # to remove MrT
+        full_list_MCx.append((animal,sessionList))
+    full_list_MCx = [(animal,session) for animal,sessions in full_list_MCx for session in set(sessions)]
+    # load the DFs
+    allDFs_MCx = []
+    for animal, session in full_list_MCx:
+        path = params.root/animal/session
+        allDFs_MCx.append(monkey_defs.prep_general(load_pyal_data(path)))
+
+    return full_list_MCx, allDFs_MCx
+
+def get_example_monkey_data(epoch = None):
+    raster_example = monkey_defs.raster_example
+    raster_example_df = []
+    for session in raster_example:
+        path = params.root/session.split('_')[0]/session
+        df = monkey_defs.prep_general(load_pyal_data(path))
+        if epoch is not None:
+            df = pyal.restrict_to_interval(df, epoch_fun=epoch)
+        raster_example_df.append(df)
+    return raster_example_df
+
 def get_full_mouse_data(prep_pull = False):
     defs = mouse_defs
     
@@ -328,7 +355,7 @@ def get_full_mouse_data(prep_pull = False):
 
     AllDFs=[]
     for fname in animalFiles:
-        df = dt.load_pyal_data(fname)
+        df = load_pyal_data(fname)
         df['mouse'] = fname.split(os.sep)[-1][fname.split(os.sep)[-1].find('WR'):].split('_')[0]
         df['file'] = fname.split(os.sep)[-1]
         df['session']=df['file']
@@ -358,7 +385,7 @@ def get_example_mouse_data():
     example_df = []
     for session in example:
         path = params.root / animal / session
-        df = dt.load_pyal_data(path)
+        df = load_pyal_data(path)
         path = str(path)
         df['mouse'] = path.split(os.sep)[-1][path.split(os.sep)[-1].find('WR'):].split('_')[0]
         df['file'] = path.split(os.sep)[-1]
@@ -384,7 +411,7 @@ def get_full_random_walk_data(GoodDataList_RW):
     allDFs_exec_MCx = []
     for animal, session in full_list_MCx:
         path = params.root/'random_walk'/animal/session
-        df_ = defs.prep_general(dt.load_pyal_data(path))
+        df_ = defs.prep_general(load_pyal_data(path))
 
         #separate into reaches
         df_ = defs.get_reaches_df(df_)
