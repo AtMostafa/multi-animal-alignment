@@ -30,6 +30,7 @@ BATCH_SIZE = 64
 
 #DATA PROCESSING
 pca_dims = 10
+output_dims = 2
 
 BIN_SIZE = .01  # sec
 n_components = 10 

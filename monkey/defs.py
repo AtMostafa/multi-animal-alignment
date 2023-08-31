@@ -19,6 +19,7 @@ WINDOW_exec = (-.05, .40)  # sec
 n_components = 10  # min between M1 and PMd
 areas = ('M1', 'PMd', 'MCx')
 n_targets = 8
+output_dims = 2
 
 prep_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_prep[0]/BIN_SIZE),
@@ -76,7 +77,7 @@ def custom_r2_func(y_true, y_pred):
 
 custom_r2_scorer = make_scorer(custom_r2_func)
 
-def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1', n_components: int =10, normalize_pos = False) -> np.ndarray:
+def get_data_array_and_pos(data_list: list[pd.DataFrame], epoch , area: str ='M1', n_components: int =10, normalize_pos = False) -> np.ndarray:
     """
     Applies PCA to the data and return a data matrix of the shape: sessions x targets x  trials x time x PCs
     with the minimum number of trials and timepoints shared across all the datasets/targets.
@@ -123,8 +124,8 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
     AllVel  = np.empty((len(data_list), n_targets, n_shared_trial, n_timepoints, 2))
     for session, df in enumerate(data_list):
         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
-        vel_mean = np.nanmean(pyal.concat_trials(df, 'pos'), axis=0)
-        df_.pos = [pos - vel_mean for pos in df_.pos]
+        pos_mean = np.nanmean(pyal.concat_trials(df, 'pos'), axis=0)
+        df_.pos = [pos - pos_mean for pos in df_.pos] #TODO: check if this is correct
         if normalize_pos:
             df_ = normal_mov(df_,'pos')
 
@@ -143,54 +144,3 @@ def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1
                 AllVel[session,target,trial, :, :] = trial_vel
 
     return AllData, AllVel
-
-def time_trim(a,b):
-    l = min(a.shape[0],b.shape[0])
-    return a[:l],b[:l]
-
-def _get_data_array(data_list: list[pd.DataFrame], epoch_L: int =None , area: str ='M1', model=None) -> np.ndarray:
-    "Similat to `get_data_array` only returns an apoch of length `epoch_L` randomly chosen along each trial"
-    if isinstance(data_list, pd.DataFrame):
-        data_list = [data_list]
-    if isinstance(model, int):
-        model = PCA(n_components=model, svd_solver='full')
-    
-    field = f'{area}_rates'
-    n_shared_trial = np.inf
-    target_ids = np.unique(data_list[0].target_id)
-    for df in data_list:
-        for target in target_ids:
-            df_ = pyal.select_trials(df, df.target_id== target)
-            n_shared_trial = np.min((df_.shape[0], n_shared_trial))
-
-    n_shared_trial = int(n_shared_trial)
-
-    # finding the number of timepoints
-    n_timepoints = int(df_[field][0].shape[0])
-    # n_timepoints = int(df_[field][0].shape[0])
-    if epoch_L is None:
-        epoch_L = n_timepoints
-    else:
-        assert epoch_L < n_timepoints, 'Epoch longer than data'
-    
-    # pre-allocating the data matrix
-    AllData = np.zeros((len(data_list), len(target_ids), n_shared_trial, epoch_L, model.n_components))
-
-    for session, df in enumerate(data_list):
-        rates = np.concatenate(df[field].values, axis=0)
-        rates_model = model.fit(rates)
-        df_ = pyal.apply_dim_reduce_model(df, rates_model, field, '_pca');
-
-        for targetIdx,target in enumerate(target_ids):
-            df__ = pyal.select_trials(df_, df_.target_id==target)
-            all_id = df__.trial_id.to_numpy()
-            # to guarantee shuffled ids
-            rng.shuffle(all_id)
-            # select the right number of trials to each target
-            df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
-            for trial, trial_rates in enumerate(df__._pca):
-                time_idx = rng.integers(trial_rates.shape[0]-epoch_L)
-                trial_data = trial_rates[time_idx:time_idx+epoch_L,:]
-                AllData[session,targetIdx,trial, :, :] = trial_data
-
-    return AllData
