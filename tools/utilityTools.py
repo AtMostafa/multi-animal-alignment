@@ -65,8 +65,6 @@ def shaded_errorbar(ax:plt.axes, x:np.array, y:np.array =None, lineStat=np.mean,
             line.set_label(props[key])
             shadeProps.pop(key,None)
 
-
-
     shadedY = errorStat(y, axis=1)
     shade = ax.fill_between(x, lineStat(y, axis=1)-shadedY, lineStat(y, axis=1)+shadedY,
                             alpha=alpha, **shadeProps)
