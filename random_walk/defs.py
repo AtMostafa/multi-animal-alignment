@@ -29,27 +29,13 @@ target_grid = (3,3)
 match_mse_cutoff_perc = 2
 n_centers = target_grid[0]*target_grid[1]
 target_groups = np.array([str(i)+ '_'+ str(j) for i in range(n_centers) for j in range(n_angle_groups)])
+output_dims = 2
 
 min_trials_per_target = 6
-# prep_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
-#                                      rel_start=int(WINDOW_prep[0]/BIN_SIZE),
-#                                      rel_end=int(WINDOW_prep[1]/BIN_SIZE)
-#                                     )
 exec_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_exec[0]/BIN_SIZE),
                                      rel_end=int(WINDOW_exec[1]/BIN_SIZE)
                                     )
-# fixation_epoch = pyal.generate_epoch_fun(start_point_name='idx_target_on',
-#                                          rel_start=int(WINDOW_prep[0]/BIN_SIZE),
-#                                          rel_end=int(WINDOW_prep[1]/BIN_SIZE)
-#                                         )
-# exec_epoch_decode = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
-#                                      rel_start=int(WINDOW_exec[0]/BIN_SIZE) - MAX_HISTORY,
-#                                      rel_end=int(WINDOW_exec[1]/BIN_SIZE)
-#                                     )
-
-# def get_target_id(trial):
-#     return int(np.round((trial.target_direction + np.pi) / (0.25*np.pi))) - 1
 
 def prep_general (df):
     "preprocessing general!"
@@ -243,7 +229,6 @@ def get_paired_data_arrays(df1, df2, epoch: Callable =None , area: str ='M1', mo
     df2_ = pyal.restrict_to_interval(df2, epoch_fun=epoch) if epoch is not None else df
     df2_ = pyal.dim_reduce(df2_, model, field, '_pca');
 
-
     for targetIdx,target in enumerate(target_ids):
         df1__ = pyal.select_trials(df1_, df1_.target_id==target)
         df2__ = pyal.select_trials(df2_, df2_.target_id==target)
@@ -264,139 +249,6 @@ def get_paired_data_arrays(df1, df2, epoch: Callable =None , area: str ='M1', mo
             AllData2[0,targetIdx,trial, :, :] = trial_rates2
 
     return AllData1, AllData2
-
-def get_data_array(data_list: list[pd.DataFrame], epoch: Callable =None , area: str ='M1', model: Callable =None, n_components:int = 10) -> np.ndarray:
-    """
-    Applies the `model` to the `data_list` and return a data matrix of the shape: sessions x targets x trials x time x modes
-    with the minimum number of trials and timepoints shared across all the datasets/targets.
-    
-    Parameters
-    ----------
-    `data_list`: list of pd.dataFrame datasets from pyalData (could also be a single dataset)
-    `epoch`: an epoch function of the type `pyal.generate_epoch_fun()`
-    `area`: area, either: 'M1', or 'S1', or 'PMd', ...
-    `model`: a model that implements `.fit()`, `.transform()` and `n_components`. By default: `PCA(10)`. If it's an integer: `PCA(integer)`.
-    `n_components`: use `model`, this is for backward compatibility
-    
-    Returns
-    -------
-    `AllData`: np.ndarray
-    Signature
-    -------
-    AllData = get_data_array(data_list, execution_epoch, area='M1', model=10)
-    all_data = np.reshape(AllData, (-1,10))
-    """
-    if isinstance(data_list, pd.DataFrame):
-        data_list = [data_list]
-    if model is None:
-        model = PCA(n_components=n_components, svd_solver='full')
-    elif isinstance(model, int):
-        model = PCA(n_components=model, svd_solver='full')
-    
-    field = f'{area}_rates'
-    n_shared_trial = np.inf
-    target_ids = np.unique(data_list[0].target_id)
-    for df in data_list:
-        for target in target_ids:
-            df_ = pyal.select_trials(df, df.target_id== target)
-            n_shared_trial = np.min((df_.shape[0], n_shared_trial))
-
-    n_shared_trial = int(n_shared_trial)
-
-    # finding the number of timepoints
-    if epoch is not None:
-        df_ = pyal.restrict_to_interval(data_list[0],epoch_fun=epoch)
-    n_timepoints = int(df_[field][0].shape[0])
-
-    # pre-allocating the data matrix
-    AllData = np.empty((len(data_list), len(target_ids), n_shared_trial, n_timepoints, model.n_components))
-
-    rng = np.random.default_rng(12345)
-    for session, df in enumerate(data_list):
-        df_ = pyal.restrict_to_interval(df, epoch_fun=epoch) if epoch is not None else df
-        rates = np.concatenate(df_[field].values, axis=0)
-        rates_model = model.fit(rates)
-        df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
-
-        for targetIdx,target in enumerate(target_ids):
-            df__ = pyal.select_trials(df_, df_.target_id==target)
-            all_id = df__.reach_id.to_numpy()
-            # to guarantee shuffled ids
-            while ((all_id_sh := rng.permutation(all_id)) == all_id).all():
-                continue
-            all_id = all_id_sh
-            # select the right number of trials to each target
-            df__ = pyal.select_trials(df__, lambda trial: trial.reach_id in all_id[:n_shared_trial])
-            for trial, trial_rates in enumerate(df__._pca):
-                AllData[session,targetIdx,trial, :, :] = trial_rates
-
-    return AllData
-
-# def custom_r2_func(y_true, y_pred):
-#     "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
-#     c = np.corrcoef(y_true.T, y_pred.T) ** 2
-#     return np.diag(c[-int(c.shape[0]/2):,:int(c.shape[1]/2)])
-
-# custom_r2_scorer = make_scorer(custom_r2_func)
-
-# def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1', n_components: int =10) -> np.ndarray:
-#     """
-#     Applies PCA to the data and return a data matrix of the shape: sessions x targets x  trials x time x PCs
-#     with the minimum number of trials and timepoints shared across all the datasets/targets.
-    
-#     Parameters
-#     ----------
-#     `data_list`: list of pd.dataFrame datasets from pyal-data
-#     `epoch`: an epoch function of the type `pyal.generate_epoch_fun`
-#     `area`: area, either: 'M1', or 'S1', or 'PMd'
-
-#     Returns
-#     -------
-#     `AllData`: np.array
-
-#     Signature
-#     -------
-#     AllData = get_data_array(data_list, execution_epoch, area='M1', n_components=10)
-#     all_data = np.reshape(AllData, (-1,10))
-#     """
-#     field = f'{area}_rates'
-#     n_shared_trial = np.inf
-#     for df in data_list:
-#         for target in range(n_targets):
-#             df_ = pyal.select_trials(df, df.target_id== target)
-#             n_shared_trial = np.min((df_.shape[0], n_shared_trial))
-
-#     n_shared_trial = int(n_shared_trial)
-
-#     # finding the number of timepoints
-#     df_ = pyal.restrict_to_interval(df_,epoch_fun=epoch)
-#     n_timepoints = int(df_[field][0].shape[0])
-
-#     # pre-allocating the data matrix
-#     AllData = np.empty((len(data_list), n_targets, n_shared_trial, n_timepoints, n_components))
-#     AllVel  = np.empty((len(data_list), n_targets, n_shared_trial, n_timepoints, 2))
-#     for session, df in enumerate(data_list):
-#         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
-#         rates = np.concatenate(df_[field].values, axis=0)
-#         rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
-#         df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca')
-#         vel_mean = np.nanmean(pyal.concat_trials(df, 'pos'), axis=0)
-
-#         for target in range(n_targets):
-#             df__ = pyal.select_trials(df_, df_.target_id==target)
-#             all_id = df__.trial_id.to_numpy()
-#             rng.shuffle(all_id)
-#             # select the right number of trials to each target
-#             df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
-#             for trial, (trial_rates,trial_vel) in enumerate(zip(df__._pca, df__.pos)):
-#                 AllData[session,target,trial, :, :] = trial_rates
-#                 AllVel[session,target,trial, :, :] = trial_vel - vel_mean
-
-#     return AllData, AllVel
-
-# def time_trim(a,b):
-#     l = min(a.shape[0],b.shape[0])
-#     return a[:l],b[:l]
 
 def _get_data_array(data_list: list[pd.DataFrame], epoch_L: int =None , area: str ='M1', model=None) -> np.ndarray:
     "Similar to `get_data_array` only returns an epoch of length `epoch_L` randomly chosen along each trial"
@@ -444,24 +296,3 @@ def _get_data_array(data_list: list[pd.DataFrame], epoch_L: int =None , area: st
                 AllData[session,targetIdx,trial, :, :] = trial_data
 
     return AllData
-
-def trim_across_monkey_corr(paired_dfs):
-    from scipy.stats import pearsonr
-    across_corrs = {}
-    #for each paired session
-    all_across_corrs = []
-    for _, df1__, df2__ in paired_dfs:
-
-        df1 = pyal.restrict_to_interval(df1__, epoch_fun=exec_epoch)
-        df2 = pyal.restrict_to_interval(df2__, epoch_fun=exec_epoch)
-
-        across_corrs = []
-        #correlate pairs of reaches
-        for pos1,pos2 in zip(df1.pos, df2.pos):
-            across_corrs.append(mean_squared_error(pos1,pos2))
-
-            # r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
-            # across_corrs.append(np.mean(np.abs(r)))
-        all_across_corrs.append(across_corrs)
-
-    return all_across_corrs

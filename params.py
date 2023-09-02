@@ -21,7 +21,6 @@ n_iter = 100
 Behav_corr_TH = 0.5
 annotate_stats = False
 
-
 def set_rc_params(dictArg:dict ={}):
     matplotlib.rcParams['backend']   = 'PDF'
     matplotlib.rcParams['lines.markersize'] = 4
@@ -67,22 +66,6 @@ def add_panel_caption(axes: tuple, offsetX: tuple, offsetY: tuple, **kwargs):
             ax.text2D(x=(axbox.x0/fbox.xmax)-abs(dx), y=(axbox.y1/fbox.ymax)+abs(dy),
                     s=s, fontweight='extra bold', fontsize=10, ha='left', va='center',
                     transform=fig.transFigure,**kwargs)
-            
-
-
-def load_unit_depth(df, field='depthCtx'):
-    """
-    used for the mice datasets
-    *RAW* datafils must be saved under: `root / mouse-data-raw`
-    """
-    from scipy.io import loadmat
-    fileName = df.file[0]
-    
-    rawFile = root / 'mouse-data-raw' / fileName
-    rawFile = rawFile.parent / (rawFile.stem[:-3] + rawFile.suffix)
-    
-    a = loadmat(rawFile)[field].flatten()
-    return a
 
 class panels:
     "sizes of different panels in the paper"
@@ -97,13 +80,7 @@ class panels:
     proj_3d_align = (LargeFig[0],SmallH)
     cca = (1.5, SmallH)
     cca_hist = (2,SmallH)
-    decoding_hist = (2,SmallH)
-    neuro_behav_corr = (2.1, SmallH)
 
-    rnn_schematic = (2.0,SmallH)
-    rnn_output = (1.6, SmallH)
-    rnn_mse = (1, SmallH-0.3)
-    rnn_corr = (1.4, SmallH-0.3)
     rnn_raster = (2,SmallH)
     rnn_velocity = (2, TinyH)
     rnn_cca = (1.5 , MedH -0.2)
@@ -121,8 +98,5 @@ class colors:
     SimAcrossCC = 'indigo'
     MonkeyPts = 'xkcd:brown'
     MousePts = 'xkcd:violet'
-    WithinRNNPts = 'cornflowerblue'
-    AcrossRNNPts = 'indigo'
-    UniversalDecoder = 'goldenrod'
     LeftTrial = (0,1,0,1)
     RightTrial = (1,0,0,1)

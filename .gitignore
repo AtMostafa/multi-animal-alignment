@@ -133,15 +133,5 @@ dmypy.json
 rnn/results/
 rnn/__pycache__/
 rnn/data/
-rnn/results_old/
 data/
-rnn/results*
-
-# random walk results
-random_walk/figures/
-paper_old/
-figures_old/
 old/
-figures_new/
-paper_new/
-paper_cleaned/

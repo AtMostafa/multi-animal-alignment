@@ -324,7 +324,7 @@ class Runner:
 
         """
         import torch.nn.functional as F
-        from tools.dataTools import canoncorr_torch
+        from tools.ccaTools import canoncorr_torch
         from kornia.filters.kernels import get_gaussian_kernel1d
 
         tsteps, batch_size, n_neurons = rl1.shape

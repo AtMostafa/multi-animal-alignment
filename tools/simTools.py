@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 import tools.dataTools as dt
+import tools.ccaTools as cca
 import rnn.defs as rnn_defs
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -232,43 +233,43 @@ def get_processed_pyaldata(seed, sim, epoch_fun = None):
 
     return pyal_df
 
-def get_cc_within(dfs, n_components, epoch_fun = None):
-    """
-    Get canonical correlations within trials for each network
+# def get_cc_within(dfs, n_components, epoch_fun = None):
+#     """
+#     Get canonical correlations within trials for each network
 
-    Parameters
-    ----------
-    dfs: list of Pandas dataframes
-        dataframes for simulation data for each network in pyaldata format
-    n_components: int
-        number of components for PCA
-    epoch_fun : function
-        function that takes a trial and returns the epoch to extract
+#     Parameters
+#     ----------
+#     dfs: list of Pandas dataframes
+#         dataframes for simulation data for each network in pyaldata format
+#     n_components: int
+#         number of components for PCA
+#     epoch_fun : function
+#         function that takes a trial and returns the epoch to extract
 
-    Returns
-    -------
-    ccs: list
-        canonical correlations for each network
-    """
-    data = dt.get_data_array(dfs, epoch_fun, area = 'MCx', model = n_components)
+#     Returns
+#     -------
+#     ccs: list
+#         canonical correlations for each network
+#     """
+#     data = dt.get_data_array(dfs, epoch_fun, area = 'MCx', model = n_components)
 
-    n_shared_trial1 = data.shape[2]
-    trialList1 = np.arange(n_shared_trial1)
-    ccs=[]
-    for session, sessionData in enumerate(data):
-        r = []
-        for n in range(params.n_iter*10):
-            params.rng.shuffle(trialList1)
-            # non-overlapping randomised trials
-            trial1 = trialList1[:n_shared_trial1//2]
-            trial2 = trialList1[-(n_shared_trial1//2):]
-            data1 = np.reshape(sessionData[:,trial1,:,:], (-1,n_components))
-            data2 = np.reshape(sessionData[:,trial2,:,:], (-1,n_components))
-            r.append(dt.canoncorr(data1, data2))
-        ccs.append(r)
-    ccs = np.array(ccs)
-    ccs = np.percentile(ccs, 99, axis=1).T
-    return ccs
+#     n_shared_trial1 = data.shape[2]
+#     trialList1 = np.arange(n_shared_trial1)
+#     ccs=[]
+#     for session, sessionData in enumerate(data):
+#         r = []
+#         for n in range(params.n_iter*10):
+#             params.rng.shuffle(trialList1)
+#             # non-overlapping randomised trials
+#             trial1 = trialList1[:n_shared_trial1//2]
+#             trial2 = trialList1[-(n_shared_trial1//2):]
+#             data1 = np.reshape(sessionData[:,trial1,:,:], (-1,n_components))
+#             data2 = np.reshape(sessionData[:,trial2,:,:], (-1,n_components))
+#             r.append(cca.canoncorr(data1, data2))
+#         ccs.append(r)
+#     ccs = np.array(ccs)
+#     ccs = np.percentile(ccs, 99, axis=1).T
+#     return ccs
 
 def get_cc_across(dfs, n_components, epoch_fun = None):
     """
@@ -298,18 +299,8 @@ def get_cc_across(dfs, n_components, epoch_fun = None):
     #setup data
     side1df = [dfs[i] for i,_ in pairFileList1]
     side2df = [dfs[j] for _,j in pairFileList1]
-    AllData1 = dt.get_data_array(side1df, epoch_fun, area='MCx', model=n_components)
-    AllData2 = dt.get_data_array(side2df, epoch_fun, area='MCx', model=n_components)
-    
-    #calculate ccs
-    _,_, min_trials, min_time,_ = np.min((AllData1.shape,AllData2.shape),axis=0)
-    ccs=[]
-    for sessionData1,sessionData2 in zip(AllData1,AllData2):
-        data1 = np.reshape(sessionData1[:,:min_trials,:min_time,:], (-1,n_components))
-        data2 = np.reshape(sessionData2[:,:min_trials,:min_time,:], (-1,n_components))
-        ccs.append(dt.canoncorr(data1, data2))
-    
-    ccs = np.array(ccs).T
+
+    ccs = cca.get_ccs(side1df, side2df, epoch_fun, area='MCx', n_components=n_components)
 
     return ccs
 
@@ -342,18 +333,8 @@ def get_cc_across_groups(dfs1, dfs2, n_components, epoch_fun = None):
     #setup data
     side1df = [dfs1[i] for i,_ in pairFileList1]
     side2df = [dfs2[j] for _,j in pairFileList1]
-    AllData1 = dt.get_data_array(side1df, epoch_fun, area='MCx', model=n_components)
-    AllData2 = dt.get_data_array(side2df, epoch_fun, area='MCx', model=n_components)
 
-    #calculate ccs  
-    _,_, min_trials, min_time,_ = np.min((AllData1.shape,AllData2.shape),axis=0)
-    ccs=[]
-    for sessionData1,sessionData2 in zip(AllData1,AllData2):
-        data1 = np.reshape(sessionData1[:,:min_trials,:min_time,:], (-1,n_components))
-        data2 = np.reshape(sessionData2[:,:min_trials,:min_time,:], (-1,n_components))
-        ccs.append(dt.canoncorr(data1, data2))
-    
-    ccs = np.array(ccs).T
+    ccs = cca.get_ccs(side1df, side2df, epoch_fun, area='MCx', n_components=n_components)
 
     return ccs
 
@@ -430,37 +411,6 @@ def trim_across_rnn_corr(dfs, epoch_fun = rnn_defs.exec_epoch):
                         r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
                         across_corrs[df1_.seed[0]][df2_.seed[0]].append(np.mean(np.abs(r)))
     return across_corrs
-
-
-# def trim_within_rnn_corr(dfs):
-#     """
-#     Get behavioural correlations within trials of each network
-
-#     Parameters
-#     ----------
-#     dfs: list of Pandas dataframes
-#         dataframes for simulation data for each network in pyaldata format 
-
-#     Returns
-#     -------
-#     within_ccs: dict
-#         behavioural correlations for each network
-#     """
-#     within_corrs = {}
-#     for dfi, df1__ in enumerate(dfs):
-#         df1 = pyal.restrict_to_interval(df1__, epoch_fun=rnn_defs.exec_epoch)
-#         targets = np.unique(df1.target_id)
-#         within_corrs[df1.seed[0]]=[]
-#         for target in targets:
-#             df1_ = pyal.select_trials(df1, df1.target_id == target)
-#             for n in range(10):
-#                 shuffled = df1_.sample(frac=1)
-#                 result = np.array_split(shuffled, 2) 
-#                 for i, pos1 in enumerate(result[0].pos):
-#                     for j, pos2 in enumerate(result[1].pos):
-#                         r = [pearsonr(aa,bb)[0] for aa,bb in zip(pos1.T,pos2.T)]
-#                         within_corrs[df1_.seed[0]].append(np.mean(np.abs(r)))
-#     return within_corrs
 
 def get_weights(seed,sim, before_training=False):
 

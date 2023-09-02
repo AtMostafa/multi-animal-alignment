@@ -20,6 +20,8 @@ WINDOW_exec = (-.05, .4)  # sec
 n_components = 10  # min between M1 and Str
 areas = ('M1', 'Str')
 n_targets = 2
+output_dims = 3
+
 
 prep_epoch = pyal.generate_epoch_fun(start_point_name='idx_movement_on',
                                      rel_start=int(WINDOW_prep[0]/BIN_SIZE),
@@ -44,13 +46,6 @@ exec_epoch_pull = pyal.generate_epoch_fun(start_point_name='idx_pull_on',
                                          rel_start=int(WINDOW_exec_pull[0]/BIN_SIZE),
                                          rel_end=int(WINDOW_exec_pull[1]/BIN_SIZE)
                                          )
-
-def custom_r2_func(y_true, y_pred):
-    "$R^2$ value as squared correlation coefficient, as per Gallego, NN 2020"
-    c = np.corrcoef(y_true.T, y_pred.T) ** 2
-    return np.diag(c[-int(c.shape[0]/2):,:int(c.shape[1]/2)])
-
-custom_r2_scorer = make_scorer(custom_r2_func)
 
 def prep_general_mouse (df):
     "preprocessing general! for J. Dudman mouse data"
@@ -208,128 +203,3 @@ def prep_pull_mouse (df):
     df_= pyal.add_firing_rates(df_, 'smooth', std=0.05)
 
     return df_
-
-
-def get_data_array_and_vel(data_list: list[pd.DataFrame], epoch , area: str ='M1', n_components: int =10) -> np.ndarray:
-    """
-    Applies PCA to the data and return a data matrix of the shape: sessions x targets x  trials x time x PCs
-    with the minimum number of trials and timepoints shared across all the datasets/targets.
-    
-    Parameters
-    ----------
-    `data_list`: list of pd.dataFrame datasets from pyal-data
-    `epoch`: an epoch function of the type `pyal.generate_epoch_fun`
-    `area`: area, either: 'M1', or 'S1', or 'PMd'
-
-    Returns
-    -------
-    `AllData`: np.array
-
-    Signature
-    -------
-    AllData = get_data_array(data_list, execution_epoch, area='M1', n_components=10)
-    all_data = np.reshape(AllData, (-1,10))
-    """
-    field = f'{area}_rates'
-    n_shared_trial = np.inf
-    for df in data_list:
-        for target in range(n_targets):
-            df_ = pyal.select_trials(df, df.target_id== target)
-            n_shared_trial = np.min((df_.shape[0], n_shared_trial))
-
-    n_shared_trial = int(n_shared_trial)
-
-    # finding the number of timepoints
-    df_ = pyal.restrict_to_interval(df_,epoch_fun=epoch)
-    n_timepoints = int(df_[field][0].shape[0])
-
-    # pre-allocating the data matrix
-    AllData = np.empty((len(data_list), n_targets, n_shared_trial, n_timepoints, n_components))
-    AllVel  = np.empty((len(data_list), n_targets, n_shared_trial, n_timepoints, 3))
-    for session, df in enumerate(data_list):
-        df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
-        rates = np.concatenate(df_[field].values, axis=0)
-        rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
-        df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
-        vel_mean = np.nanmean(pyal.concat_trials(df, 'hTrjB'), axis=0)
-
-        for target in range(n_targets):
-            df__ = pyal.select_trials(df_, df_.target_id==target)
-            all_id = df__.trial_id.to_numpy()
-            rng.shuffle(all_id)
-            # select the right number of trials to each target
-            df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
-            for trial, (trial_rates,trial_vel) in enumerate(zip(df__._pca, df__.hTrjB)):
-                AllData[session,target,trial, :, :] = trial_rates
-                AllVel[session,target,trial, :, :] = trial_vel- vel_mean
-    
-    return AllData, AllVel
-
-def get_data_array_and_vel_timelags(data_list: list[pd.DataFrame], timelags: list[int], start_point_name='idx_movement_on', rel_start=int(WINDOW_exec[0]/BIN_SIZE), rel_end=int(WINDOW_exec[1]/BIN_SIZE), area: str ='M1', n_components: int =10) -> np.ndarray:
-    """
-    Applies PCA to the data and return a data matrix of the shape: sessions x targets x  trials x time x PCs
-    with the minimum number of trials and timepoints shared across all the datasets/targets.
-    
-    Parameters
-    ----------
-    `data_list`: list of pd.dataFrame datasets from pyal-data
-    `timelags`: timelags for each dataset
-    `start_point_name`: epoch start point
-    `rel_start`: epoch rel start
-    `rel_end`: epoch rel end
-    `area`: area, either: 'M1', or 'S1', or 'PMd'
-
-    Returns
-    -------
-    `AllData`: np.array
-
-    Signature
-    -------
-    AllData = get_data_array(data_list, execution_epoch, area='M1', n_components=10)
-    all_data = np.reshape(AllData, (-1,10))
-    """
-    assert(len(data_list) == len(timelags))
-    field = f'{area}_rates'
-    n_shared_trial = np.inf
-    for df in data_list:
-        for target in range(n_targets):
-            df_ = pyal.select_trials(df, df.target_id== target)
-            n_shared_trial = np.min((df_.shape[0], n_shared_trial))
-
-    n_shared_trial = int(n_shared_trial)
-
-    # finding the number of timepoints
-    epoch = pyal.generate_epoch_fun(start_point_name=start_point_name,
-                                        rel_start=rel_start + timelags[0],
-                                        rel_end=rel_end+timelags[0])
-    df_ = pyal.restrict_to_interval(df_,epoch_fun=epoch)
-    n_timepoints = int(df_[field][0].shape[0])
-
-    # pre-allocating the data matrix
-    AllData = np.empty((len(data_list), n_targets, n_shared_trial, n_timepoints, n_components))
-    AllVel  = np.empty((len(data_list), n_targets, n_shared_trial, n_timepoints, 3))
-    for session, df in enumerate(data_list):
-        epoch = pyal.generate_epoch_fun(start_point_name=start_point_name,
-                                        rel_start=rel_start + timelags[session],
-                                        rel_end=rel_end+timelags[session])
-        df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
-        rates = np.concatenate(df_[field].values, axis=0)
-        rates_model = PCA(n_components=n_components, svd_solver='full').fit(rates)
-        df_ = pyal.apply_dim_reduce_model(df_, rates_model, field, '_pca');
-        vel_mean = np.nanmean(pyal.concat_trials(df, 'hTrjB'), axis=0)
-
-        for target in range(n_targets):
-            df__ = pyal.select_trials(df_, df_.target_id==target)
-            all_id = df__.trial_id.to_numpy()
-            rng.shuffle(all_id)
-            # select the right number of trials to each target
-            df__ = pyal.select_trials(df__, lambda trial: trial.trial_id in all_id[:n_shared_trial])
-            for trial, (trial_rates,trial_vel) in enumerate(zip(df__._pca, df__.hTrjB)):
-                AllData[session,target,trial, :, :] = trial_rates
-                AllVel[session,target,trial, :, :] = trial_vel- vel_mean
-    
-    return AllData, AllVel
-
-def time_trim(a,b):
-    l = min(a.shape[0],b.shape[0])
-    return a[:l],b[:l]
