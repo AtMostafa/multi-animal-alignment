@@ -5,7 +5,8 @@ This repository includes code to reproduce the figures in [Mostafa & Chang et. a
 ## Getting Started
 
 Create a conda environment with ```conda env create -f env.yml``` and activate the environment with ```conda activate cca```.
-Note that a version of MATLAB is needed for matlabengine, which is used for Fig S2. Comment out the matlabengine line if you do not have matlab installed. Otherwise, change the version of matlabengine according to the MATLAB version you have installed. 
+
+Note that a version of MATLAB is needed for matlabengine, which is used for Fig S2. Comment out the matlabengine line if you do not have MATLAB installed. Otherwise, change the version of matlabengine according to the MATLAB version you have installed. 
 
 ## Reproducing figures
 
