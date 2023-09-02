@@ -1,6 +1,6 @@
 # Preserved neural dynamics across animals performing similar behaviour
 
-This repository includes code to reproduce the figures in [Mostafa & Chang et. al (bioRxiv, 2022)](https://www.biorxiv.org/content/10.1101/2022.09.26.509498v1).
+This repository includes code to reproduce the figures in [Safaie & Chang et. al (bioRxiv, 2022)](https://www.biorxiv.org/content/10.1101/2022.09.26.509498v1).
 
 ## Getting Started
 
