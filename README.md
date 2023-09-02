@@ -10,7 +10,7 @@ Note that a version of MATLAB is needed for matlabengine, which is used for Fig 
 
 ## Reproducing figures
 
-TODO: add data
+TODO: add data upon publication
 
 Each figure in the paper has an associated Jupyter notebook under ```paper/```. Running the cells reproduces all of the subfigures. 
 
