@@ -23,3 +23,12 @@ The code has been tested on Linux (Ubuntu 18.04).
 
 ## License
 [MIT](https://opensource.org/license/mit/)
+
+## Code Credit
+Code from the following sources have been copied and used here under ```packages/``` or ```tools/``` with slight modifications:
+* [config_manager](https://github.com/seblee97/config_package)https://github.com/seblee97/config_package from [Sebastian Lee](https://github.com/seblee97)
+* [pyaldata](https://github.com/NeuralAnalysis/PyalData)https://github.com/NeuralAnalysis/PyalData from [Neural Analysis](https://github.com/NeuralAnalysis)https://github.com/NeuralAnalysis
+* [dPCA](https://github.com/machenslab/dPCA/tree/master/matlab) from [machenslab](https://github.com/machenslab)
+* [TME](https://github.com/gamaleldin/TME/tree/master) from [Gamaleldin Elsayed](https://github.com/gamaleldin)
+
+Associated publications are referenced in the paper.
