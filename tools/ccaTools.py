@@ -70,7 +70,7 @@ def get_ccs_upper_bound(side1df, epoch, area, n_components, calc_percentile = Tr
 
     return CCsU
 
-def get_ccs_lower_bound(side1df, side2df, area, n_components, len_trial, calc_percentile = True, use_procrustes = False):
+def get_ccs_lower_bound_monkey(side1df, side2df, area, n_components, len_trial, calc_percentile = True, use_procrustes = False):
     n_iter = params.n_iter * 10
 
     #get data
@@ -88,6 +88,35 @@ def get_ccs_lower_bound(side1df, side2df, area, n_components, len_trial, calc_pe
 
             data1 = np.reshape(sessionData1_sh[:,:min_trials,:min_time,:], (-1,n_components))
             data2 = np.reshape(sessionData2_sh[:,:min_trials,:min_time,:], (-1,n_components))
+            if use_procrustes:
+                r.append(procrustes_wrapper(data1, data2))
+            else:
+                r.append(canoncorr(data1, data2))
+        CCsL.append(r)
+    CCsL = np.array(CCsL)
+    if calc_percentile:
+        CCsL = np.percentile(CCsL, 1, axis=1).T
+    return CCsL
+
+def get_ccs_lower_bound_mice(side1df, side2df, area, n_components, len_trial, calc_percentile = True, use_procrustes = False):
+    n_iter = params.n_iter * 10
+
+    #get data
+    AllData1_ = dt.get_data_array(side1df, area=area, model=n_components)
+    AllData2_ = dt.get_data_array(side2df, area=area, model=n_components)
+    _,_, min_trials, min_time,_ = np.min((AllData1_.shape,AllData2_.shape),axis=0)
+
+    #get ccs
+    CCsL=[]
+    for sessionData1,sessionData2 in zip(AllData1_,AllData2_):
+        r = []
+        for n in range(n_iter):
+            sessionData1_sh = params.rng.permutation(sessionData1,axis=0)
+            sessionData2_sh = params.rng.permutation(sessionData2,axis=0)
+            time_idx = params.rng.integers(min_time-len_trial)
+
+            data1 = np.reshape(sessionData1_sh[:,:min_trials,time_idx:time_idx+len_trial,:], (-1,n_components))
+            data2 = np.reshape(sessionData2_sh[:,:min_trials,time_idx:time_idx+len_trial,:], (-1,n_components))
             if use_procrustes:
                 r.append(procrustes_wrapper(data1, data2))
             else:
@@ -125,7 +154,10 @@ def plot_cca(ax, ax_hist, allDFs, epoch, area, n_components, dataset = 'monkey',
     else:
         len_trial = int(np.round(np.diff(defs.WINDOW_exec)/defs.BIN_SIZE))
     allCCs = get_ccs(pair_side1df, pair_side2df, epoch, area, n_components, use_procrustes = use_procrustes)
-    CCsL = get_ccs_lower_bound(pair_side1df, pair_side2df, area, n_components, len_trial, use_procrustes = use_procrustes)
+    if dataset == 'monkey':
+        CCsL = get_ccs_lower_bound_monkey(pair_side1df, pair_side2df, area, n_components, len_trial, use_procrustes = use_procrustes)
+    else:
+        CCsL = get_ccs_lower_bound_mice(pair_side1df, pair_side2df, area, n_components, len_trial, use_procrustes = use_procrustes)
     CCsU = get_ccs_upper_bound(side1df, epoch, area, n_components, use_procrustes=use_procrustes)
 
     # plotting
@@ -228,7 +260,10 @@ def plot_cca_for_ex(ax, example_dfs, epoch, area, n_components, dataset = 'monke
     else:
         len_trial = int(np.round(np.diff(defs.WINDOW_prep)/defs.BIN_SIZE))
     allCCs = get_ccs(df1,df2, epoch, area, n_components)
-    CCsL = get_ccs_lower_bound(df1,df2, area, n_components, len_trial)
+    if dataset == 'monkey':
+        CCsL = get_ccs_lower_bound_monkey(df1,df2, area, n_components, len_trial)
+    else:
+        CCsL = get_ccs_lower_bound_mice(df1,df2, area, n_components, len_trial)
     CCsU = get_ccs_upper_bound([df1,df2], epoch, area, n_components)
 
     # plotting
