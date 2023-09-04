@@ -10,7 +10,6 @@ screen -dmSL fig4 bash -c \
 screen -dmSL fig5 bash -c \
 'jupyter nbconvert --execute --to figg5.ipynb --inplace fig5.ipynb'
 
-#to run
 screen -dmSL S1 bash -c \
 'jupyter nbconvert --execute --to figS1-monkey-behavior.ipynb --inplace figS1-monkey-behavior.ipynb'
 screen -dmSL S2 bash -c \
