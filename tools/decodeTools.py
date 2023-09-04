@@ -215,7 +215,10 @@ def monkey_decoding(allDFs, epoch, area, redo = False, n_components = monkey_def
     aligned_score = {}
     unaligned_score = {}
     for i, df1 in enumerate(tqdm(allDFs)):
-        pathPickle = params.root / 'monkey-pickles' / f'{df1.session[0]}_{n_components}_within.p'
+        if custom_r2_func is not None:
+            pathPickle = params.root / 'monkey-pickles' / f'{df1.session[0]}_{n_components}_within_{custom_r2_func.__name__}.p'
+        else:
+            pathPickle = params.root / 'monkey-pickles' / f'{df1.session[0]}_{n_components}_within.p'
 
         # within animal decoding ######
         if os.path.exists(pathPickle) and not redo:
