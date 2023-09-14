@@ -308,13 +308,13 @@ def canoncorr(X:np.array, Y: np.array, fullReturn: bool = False) -> np.array:
         logging.warning('Not enough samples, might cause problems')
 
     # Center the variables
-    X = X - np.mean(X,0);
-    Y = Y - np.mean(Y,0);
+    X = X - np.mean(X,0)
+    Y = Y - np.mean(Y,0)
 
     # Factor the inputs, and find a full rank set of columns if necessary
     Q1,T11,perm1 = qr(X, mode='economic', pivoting=True, check_finite=True)
 
-    rankX = sum(np.abs(np.diagonal(T11)) > np.finfo(type((np.abs(T11[0,0])))).eps*max([n,p1]));
+    rankX = sum(np.abs(np.diagonal(T11)) > np.finfo(type((np.abs(T11[0,0])))).eps*max([n,p1]))
 
     if rankX == 0:
         logging.error(f'stats:canoncorr:BadData = X')
@@ -324,25 +324,25 @@ def canoncorr(X:np.array, Y: np.array, fullReturn: bool = False) -> np.array:
         T11 = T11[rankX,:rankX]
 
     Q2,T22,perm2 = qr(Y, mode='economic', pivoting=True, check_finite=True)
-    rankY = sum(np.abs(np.diagonal(T22)) > np.finfo(type((np.abs(T22[0,0])))).eps*max([n,p2]));
+    rankY = sum(np.abs(np.diagonal(T22)) > np.finfo(type((np.abs(T22[0,0])))).eps*max([n,p2]))
 
     if rankY == 0:
         logging.error(f'stats:canoncorr:BadData = Y')
     elif rankY < p2:
         logging.warning('stats:canoncorr:NotFullRank = Y')
-        Q2 = Q2[:,:rankY];
-        T22 = T22[:rankY,:rankY];
+        Q2 = Q2[:,:rankY]
+        T22 = T22[:rankY,:rankY]
 
     # Compute canonical coefficients and canonical correlations.  For rankX >
     # rankY, the economy-size version ignores the extra columns in L and rows
     # in D. For rankX < rankY, need to ignore extra columns in M and D
     # explicitly. Normalize A and B to give U and V unit variance.
-    d = min(rankX,rankY);
+    d = min(rankX,rankY)
     L,D,M = svd(Q1.T @ Q2, full_matrices=True, check_finite=True, lapack_driver='gesdd')
     M = M.T
 
-    A = inv(T11) @ L[:,:d] * np.sqrt(n-1);
-    B = inv(T22) @ M[:,:d] * np.sqrt(n-1);
+    A = inv(T11) @ L[:,:d] * np.sqrt(n-1)
+    B = inv(T22) @ M[:,:d] * np.sqrt(n-1)
     r = D[:d]
     # remove roundoff errs
     r[r>=1] = 1
@@ -382,11 +382,11 @@ def canoncorr_torch(X:torch.Tensor, Y: torch.Tensor) -> torch.Tensor:
     # Factor the inputs, and find a full rank set of columns if necessary
     Q1,T11 = torch.linalg.qr(X, mode='reduced')
     Q2,T22 = torch.linalg.qr(Y, mode='reduced')
-    rankX = torch.sum(torch.abs(torch.diagonal(T11)) > torch.finfo(torch.abs(T11[0,0]).dtype).eps*max([n,p1]));
-    rankY = torch.sum(torch.abs(torch.diagonal(T22)) > torch.finfo(torch.abs(T22[0,0]).dtype).eps*max([n,p1]));
+    rankX = torch.sum(torch.abs(torch.diagonal(T11)) > torch.finfo(torch.abs(T11[0,0]).dtype).eps*max([n,p1]))
+    rankY = torch.sum(torch.abs(torch.diagonal(T22)) > torch.finfo(torch.abs(T22[0,0]).dtype).eps*max([n,p1]))
     
-    Q1 = Q1[:,:rankX];
-    Q2 = Q2[:,:rankY];
+    Q1 = Q1[:,:rankX]
+    Q2 = Q2[:,:rankY]
 
     # Canonical correlations
     r = torch.linalg.svdvals(Q1.T @ Q2) 
@@ -601,4 +601,3 @@ def VAF_pc_cc_pyal2(df1:pd.DataFrame, field1: str, epoch1, target1: int,
                                        df2, field2, epoch2, target2, n_components)
 
     return VAFs1, VAFs2, R
-

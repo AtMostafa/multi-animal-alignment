@@ -299,7 +299,7 @@ def get_data_array_and_pos(data_list: list[pd.DataFrame], epoch , area: str ='M1
     for session, df in enumerate(data_list):
         df_ = pyal.restrict_to_interval(df, epoch_fun=epoch)
         pos_mean = np.nanmean(pyal.concat_trials(df, 'pos'), axis=0)
-        df_.pos = [pos - pos_mean for pos in df_.pos] #TODO: check if this is correct
+        df_.pos = [pos - pos_mean for pos in df_.pos]
         if normalize_pos:
             df_ = normal_mov(df_,'pos')
 
