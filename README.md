@@ -18,8 +18,10 @@ Each figure in the paper has an associated Jupyter notebook under [*/paper*](/pa
 Running the cells reproduces all of the panels.
 
 For the RNN simulations associated with Figure 5 and Figure S10, first run the simulations:
-1. ```cd rnn```
-2. ```bash run.sh```
+
+```bash
+cd rnn && bash rnn.sh
+```
 
 ## System Requirements
 
