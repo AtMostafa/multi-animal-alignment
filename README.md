@@ -2,7 +2,7 @@
 
 By: Mostafa Safaie<sup>\*</sup>, Joanna C. Chang<sup>\*</sup>, Junchol Park, Lee E. Miller, Joshua T. Dudman, Matthew G. Perich and Juan A. Gallego.
 
-This repository includes code to reproduce the figures in [Safaie & Chang et al., Nature, 2023](https://www.nature.com/articles/s41586-023-06714-0).
+This repository includes code to reproduce the figures in [Safaie & Chang et. al., Nature, 2022](https://www.nature.com/articles/s41586-023-06714-0).
 
 ## Getting Started
 
@@ -45,3 +45,13 @@ Associated publications are referenced in the paper.
 ## Questions
 
 Questions can be directed to the corresponding authors, as issues on this repository, or to [Mostafa](mailto:mostafa.safaie@gmail.com) or [Joanna](mailto:joanna.changc@gmail.com).
+
+## Funders
+
+This work was supported in part by: 
+- grant number H2020-MSCA-IF-2020-101025630 from the Commission of the European Union (M.S.)
+- grant number 108908/Z/15/Z from the Wellcome Trust (J.C.C.)
+-  grant numbers NS053603 and NS074044 from the NIH National Institute of Neurological Disorders and Stroke (L.E.M.)
+-  grant _chercheurs-boursiers en intelligence artificielle_ from the Fonds de recherche du Quebec Santé (M.G.P.)
+-  grant number EP/T020970/1 from the UKRI Engineering and Physical Sciences Research Council (J.A.G.)
+-  grant number ERC-2020-StG-949660 from the European Research Council (J.A.G.).
