@@ -321,7 +321,7 @@ def canoncorr(X:np.array, Y: np.array, fullReturn: bool = False) -> np.array:
     elif rankX < p1:
         logging.warning('stats:canoncorr:NotFullRank = X')
         Q1 = Q1[:,:rankX]
-        T11 = T11[rankX,:rankX]
+        T11 = T11[:rankX,:rankX]
 
     Q2,T22,perm2 = qr(Y, mode='economic', pivoting=True, check_finite=True)
     rankY = sum(np.abs(np.diagonal(T22)) > np.finfo(type((np.abs(T22[0,0])))).eps*max([n,p2]))
