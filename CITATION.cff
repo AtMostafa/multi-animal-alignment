@@ -66,21 +66,16 @@ preferred-citation:
     affiliation: Imperial College London
     orcid: 'https://orcid.org/0000-0002-6384-8629'
   - given-names: Joanna
-    name-particle: C
     family-names: Chang
   - given-names: Junchol
     family-names: Park
   - given-names: Lee
-    name-particle: E
     family-names: Miller
   - given-names: Joshua
-    name-particle: T
     family-names: Dudman
   - given-names: Matthew
-    name-particle: F
     family-names: Perich
   - given-names: Juan
-    name-particle: A
     family-names: Gallego
   doi: "10.1038/s41586-023-06714-0"
   journal: "Nature"
@@ -89,5 +84,4 @@ preferred-citation:
   end: 771  # Last page number
   title: "Preserved neural dynamics across animals performing similar behaviour"
   issue: 623
-  volume: 1
   year: 2023
