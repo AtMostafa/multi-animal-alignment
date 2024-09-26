@@ -31,6 +31,7 @@ The code has been tested on Linux (Ubuntu >18.04).
 
 After the publication of the paper, all the monkey datasets used in this work (and more) were deposited in [this](https://dandiarchive.org/dandiset/000688) DANDI repository, in the NWB format.
 Following an easy format conversion (e.g., see [here](https://www.nwb.org/how-to-use/)), it will be easy to reproduce the analyses on the monkey datasets.
+Furthermore, the datasets of the example sessions used throughout the manuscript are deposited [here](https://osf.io/wnv3e) and can be used to reproduce some panels and to provide a template for the format conversion.
 The mouse datasets will be made available on reasonable request.
 
 ## License
