@@ -351,7 +351,7 @@ def get_full_mouse_data(prep_pull = False):
     animalList = ['mouse-data']
     animalFiles = []
     for animal in animalList:
-        animalFiles.extend(utility.find_file(params.root / animal, 'mat'))
+        animalFiles.extend(utility.find_file(params.root / animal, ['mat','p']))
 
     AllDFs=[]
     for fname in animalFiles:
